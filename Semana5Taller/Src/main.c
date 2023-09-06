@@ -18,14 +18,21 @@
 
 #include <stdint.h>
 
+uint8_t variableGlobal = 0;
 
-unsigned int day;
 
 int main(void)
 {
+	uint8_t variablelocal = 0;
     /* Loop forever */
-	while(1){
-		day++;
-	}
+	for(;;);
+	return 0;
+}
+/*Funcion para sumar a una variable global */
+void  sumaGlobal(void){
+
+}
+/*Funcion para sumar a una variable local */
+void sumalocal(void){
 
 }
