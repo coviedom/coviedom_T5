@@ -1,8 +1,8 @@
 /*
  * stm32f4xx_hal.h
  *
- *  Created on: 20/03/2023
- *      Author: melissa
+ *  Created on: SEptiembre 7
+ *      Author: Cristhian Oviedo
  *
  *Este archivo contiene la informacion mas basica del micro:
  *- Valores del reloj principal
@@ -20,10 +20,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define HSI CLOCK SPEED     8000000    //Value for the main clock signal (HSI-> Hidh speed Internal)
-#define HSE CLOCK SPEED     16000000   //Value for the main clock signal (HSe-> Hidh speed External)
+#define HSI_CLOCK SPEED     8000000    //Value for the main clock signal (HSI-> High speed Internal)
+#define HSE_CLOCK SPEED     16000000   //Value for the main clock signal (HSE-> High speed External)
 
-//#define NOP()      (    asm("Nop"))
+//#define NOP()      (    asm("NOP"))
 #define NOP()        asm("NOP")
 #define _weak        _attribute_((weak))
 
@@ -32,8 +32,8 @@
  * Datasheet, Memory Map, Figure 14
  * (Remember, 1KByte = 1024 bytes
  */
-#define FLASH_BASE_ADDR     0X08000000U  // Esta es la memoria del programa, 512KB
-#define SRAM_BASE_ADDR      0X20000000U  // Esta es la memoria RAM, 128KB.
+#define FLASH_BASE_ADDR     0x08000000U  // Esta es la memoria del programa, 512KB
+#define SRAM_BASE_ADDR      0x20000000U  // Esta es la memoria RAM, 128KB.
 
 /* NOTA: Observar que existen unos registros especificos del Cortex M4 en la region 0xE0000000U
  * los controladores de las interrupciones se encuentran alli, por ejemplo. Esto se vara a su debido
@@ -43,15 +43,15 @@
 /*
  * NOTA:
  * Ahora agregamos la direccion de memoria base para cada uno de los perifericos que posee el micro
- * En el "datasheet" del icro, figura 14 (Memory Map) encontramos el mapa de los buses_
- *    -APB1 (Advance Peropheral Bus)
- *    -APB3
- *    -AHB (Advance High-performance Bus)
+ * En el "datasheet" del icro, figura 14 (Memory Map) encontramos el mapa de los buses:
+ *    -APB1 (Advance Peripheral Bus)
+ *    -APB2
+ *    -AHB1 (Advance High-performance Bus)
  *    -AHB2
  */
 
  /**
-  * AHBx and APBxBus peripheral bases addresses
+  * AHBx and APBx Bus peripherals bases addresses
   */
 #define APB1_BASE_ADDR     0X40000000U
 #define APB2_BASE_ADDR     0X40010000U
@@ -61,75 +61,73 @@
 /**
  * Y ahora debemos hacer lo mismo pero cada una de las posiciones de memoria de cada uno de los perifericos
  * descritos en la Tabla 1 de manual de referencia del micro.
- * Observe que en dicha tala esta a su vez dividida en cuatro segmentos. cad auno correspondiente a
+ * Observe que en dicha tala esta a su vez dividida en cuatro segmentos. cada uno correspondiente a
  * APB1, APB2, AHB1, AHB2.
  *
  * Comenzar de arriba hacia abajo como se muestra en la tabla. Inicia USB_OTG_F5 (AHB2)
  */
 
 /* Posiciones de memoria para perifericos del AHB2 */
-#define USB_OTG_F5_BASE_ADDR    (GB2_BASE_ADDR + 0X0000U)
+#define USB_OTG_F5_BASE_ADDR    (AHB2_BASE_ADDR + 0x0000U)
 
 /* Posiciones de memoria para perifericos del AHB1 */
-#define DMA2_BASE_ADDR     (AHB1_BASE_ADDR + 0X6400U)
-#define DMA1_BASE_ADDR     (AHB1_BASE_ADDR + 0X6000U)
-#define FIR_BASE_ADDR      (AHB1_BASE_ADDR + 0X3C00U)   // Flash Interface Register...
-#define RCC_BASE_ADDR      (AHB1_BASE_ADDR + 0X3800U)
-#define CRC_BASE_ADDR      (AHB1_BASE_ADDR + 0X3000U)
-#define GPIOH_BASE_ADDR    (AHB1_BASE_ADDR + 0X1C00U)
-#define GPIOE_BASE_ADDR    (AHB1_BASE_ADDR + 0X1000U)
-#define GPIOD_BASE_ADDR    (AHB1_BASE_ADDR + 0X0C00U)
-#define GPIOC_BASE_ADDR    (AHB1_BASE_ADDR + 0X0800U)
-#define GPIOB_BASE_ADDR    (AHB1_BASE_ADDR + 0X0400U)
-#define GPIOA_BASE_ADDR    (AHB1_BASE_ADDR + 0X0000U)
+#define DMA2_BASE_ADDR     (AHB1_BASE_ADDR + 0x6400U)
+#define DMA1_BASE_ADDR     (AHB1_BASE_ADDR + 0x6000U)
+#define FIR_BASE_ADDR      (AHB1_BASE_ADDR + 0x3C00U)   // Flash Interface Register...
+#define RCC_BASE_ADDR      (AHB1_BASE_ADDR + 0x3800U)
+#define CRC_BASE_ADDR      (AHB1_BASE_ADDR + 0x3000U)
+#define GPIOH_BASE_ADDR    (AHB1_BASE_ADDR + 0x1C00U)
+#define GPIOE_BASE_ADDR    (AHB1_BASE_ADDR + 0x1000U)
+#define GPIOD_BASE_ADDR    (AHB1_BASE_ADDR + 0x0C00U)}
+#define GPIOC_BASE_ADDR    (AHB1_BASE_ADDR + 0x0800U)
+#define GPIOB_BASE_ADDR    (AHB1_BASE_ADDR + 0x0400U)
+#define GPIOA_BASE_ADDR    (AHB1_BASE_ADDR + 0x0000U)
 
 /* Posiciones de memoria para perifericos del APB2*/
-//#define SPI5_BASE_ADDR      (APB2_BASE_ADDR + 0X5000U)
-//#define TIM11_BASE_ADDR     (APB2_BASE_ADDR + 0X4800U)
-//#define TIM10_BASE_ADDR     (APB2_BASE_ADDR + 0X4400U)
-//#define TIM9_BASE_ADDR      (APB2_BASE_ADDR + 0X4000U)
-//#define EXTI_BASE_ADDR      (APB2_BASE_ADDR + 0X3C00U)
-//#define SYSCFG_BASE_ADDR    (APB2_BASE_ADDR + 0X3800U)
-//#define SP14_BASE_ADDR      (APB2_BASE_ADDR + 0X3400U)
-//#define SPI1_BASE_ADDR      (APB2_BASE_ADDR + 0X3000U)
-//#define SDIO_BASE_ADDR      (APB2_BASE_ADDR + 0X2C00U)
-//#define ADC1_BASE_ADDR      (APB2_BASE_ADDR + 0X2000U)
-//define  USART6_BASE_ADDR    (APB2_BASE_ADDR + 0X1400U)
-//define  USART1_BASE_ADDR    (APB2_BASE_ADDR + 0X1000U)
-//define  TIM1_BASE_ADDR      (APB2_BASE_ADDR + 0X0000U)
+//#define SPI5_BASE_ADDR      (APB2_BASE_ADDR + 0x5000U)
+//#define TIM11_BASE_ADDR     (APB2_BASE_ADDR + 0x4800U)
+//#define TIM10_BASE_ADDR     (APB2_BASE_ADDR + 0x4400U)
+//#define TIM9_BASE_ADDR      (APB2_BASE_ADDR + 0x4000U)
+//#define EXTI_BASE_ADDR      (APB2_BASE_ADDR + 0x3C00U)
+//#define SYSCFG_BASE_ADDR    (APB2_BASE_ADDR + 0x3800U)
+//#define SP14_BASE_ADDR      (APB2_BASE_ADDR + 0x3400U)
+//#define SPI1_BASE_ADDR      (APB2_BASE_ADDR + 0x3000U)
+//#define SDIO_BASE_ADDR      (APB2_BASE_ADDR + 0x2C00U)
+//#define ADC1_BASE_ADDR      (APB2_BASE_ADDR + 0x2000U)
+//define  USART6_BASE_ADDR    (APB2_BASE_ADDR + 0x1400U)
+//define  USART1_BASE_ADDR    (APB2_BASE_ADDR + 0x1000U)
+//define  TIM1_BASE_ADDR      (APB2_BASE_ADDR + 0x0000U)
 
 /* Posiciones de memoria para perifericos del APB1 */
 //#define PWR_BASE_ADDR       (APB1_BASE_ADDR + 0X7000U)
-//#define I2C3_BASE_ADDR      (APB2_BASE_ADDR + 0X5C00U)
-//#define I2C2_BASE_ADDR      (APB2_BASE_ADDR + 0X5800U)
-//#define I2C1_BASE_ADDR      (APB2_BASE_ADDR + 0X5400U)
-//#define USART2_BASE_ADDR    (APB2_BASE_ADDR + 0X4400U)
-//#define I2Sext_BASE_ADDR    (APB2_BASE_ADDR + 0X4000U)
-//#define SPI3_BASE_ADDR      (APB2_BASE_ADDR + 0X3C00U)
-//#define SPI2_BASE_ADDR      (APB2_BASE_ADDR + 0X3800U)
-//#define I2S2_BASE_ADDR      (APB2_BASE_ADDR + 0X3400U)
-//#define IWDG_BASE_ADDR      (APB2_BASE_ADDR + 0X3000U)
-//define  WWDG_BASE_ADDR      (APB2_BASE_ADDR + 0X2C00U)
-//define  RTC_BASE_ADDR       (APB2_BASE_ADDR + 0X2800U)
-//define  TIM5_BASE_ADDR      (APB2_BASE_ADDR + 0X0C00U)
-//define  TIM4_BASE_ADDR      (APB2_BASE_ADDR + 0X0800U)
-//define  TIM3_BASE_ADDR      (APB2_BASE_ADDR + 0X0400U)
-//define  TIM2_BASE_ADDR      (APB2_BASE_ADDR + 0X0000U)
+//#define I2C3_BASE_ADDR      (APB1_BASE_ADDR + 0X5C00U)
+//#define I2C2_BASE_ADDR      (APB1_BASE_ADDR + 0X5800U)
+//#define I2C1_BASE_ADDR      (APB1_BASE_ADDR + 0X5400U)
+//#define USART2_BASE_ADDR    (APB1_BASE_ADDR + 0X4400U)
+//#define I2Sext_BASE_ADDR    (APB1_BASE_ADDR + 0X4000U)
+//#define SPI3_BASE_ADDR      (APB1_BASE_ADDR + 0X3C00U)
+//#define SPI2_BASE_ADDR      (APB1_BASE_ADDR + 0X3800U)
+//#define I2S2_BASE_ADDR      (APB1_BASE_ADDR + 0X3400U)
+//#define IWDG_BASE_ADDR      (APB1_BASE_ADDR + 0X3000U)
+//define  WWDG_BASE_ADDR      (APB1_BASE_ADDR + 0X2C00U)
+//define  RTC_BASE_ADDR       (APB1_BASE_ADDR + 0X2800U)
+//define  TIM5_BASE_ADDR      (APB1_BASE_ADDR + 0X0C00U)
+//define  TIM4_BASE_ADDR      (APB1_BASE_ADDR + 0X0800U)
+//define  TIM3_BASE_ADDR      (APB1_BASE_ADDR + 0X0400U)
+//define  TIM2_BASE_ADDR      (APB1_BASE_ADDR + 0X0000U)
 
 /**
  *  Macros Genericos
- * */
-#define  ENABLE         1
-#define  DISABLE        0
+ **/
+#define  DISABLE        (0)
+#define  ENABLE         (1)
 #define  SET            ENABLE
 #define  CLEAR          DISABLE
 #define  RESET          DISABLE
-#define  GPIO_PIN_SET   SET
-#define  GPIO_PIN_RESET RESET
 #define  FLAG_SET       SET
 #define  FLAG_RESET     RESET
-#define  I2C_WRITE      0
-#define  I2C_READ       1
+#define  I2C_WRITE      (0)
+#define  I2C_READ       (1)
 
 /* +++======  INICIO  de la descripcion de los elementos que componen el periferico ========+++ */
 
@@ -137,9 +135,9 @@
  * periferico RCC.
  *
  * Debido a los temas que s evan a manejar en el curso solo deben defiir los bits de los registros:
- * 6.3.1 (RCC_R)  hasta el 6.3.12 (RCC_APB2ENR), 6.3.17 (RCC_BDCR) Y 6.3.18 (rcc_csr)
+ * 6.3.1 (RCC_R)  hasta el 6.3.12 (RCC_APB2ENR), 6.3.17 (RCC_BDCR) Y 6.3.18 (RCC_CSR)
  *
- * Nota: la posicion de memorio (offset) debe encajar perfectamente con la posicion de memoria indicada
+ * Nota: la posicion de memoria (offset) debe encajar perfectamente con la posicion de memoria indicada
  * en la hoj de datos del equipo. Observa que los elementos "reserbadps" tambien estan presentes alli.
  */
 typedef struct
@@ -176,8 +174,8 @@ typedef struct
 	volatile uint32_t CSR;        // Clock control & status register           ADDR_OFFSET   0x74
 	volatile uint32_t reserved12; // reserved                                  ADDR_OFFSET   0X78
     volatile uint32_t reserved13; // reserved                                  ADDR_OFFSET   0X7C
-	volatile uint32_t SSCGR;      // Spread spectrus clock genertion reg       ADDR_OFFSET   0x80
-	volatile uint32_t PLLI2SCGGR; // PLLI2S Configuration register             ADDR_OFFSET   0X84
+	volatile uint32_t SSCGR;      // Spread spectrum clock generation reg       ADDR_OFFSET  0x80
+	volatile uint32_t PLLI2SCFGR; // PLLI2S Configuration register             ADDR_OFFSET   0X84
     volatile uint32_t reserved14; // reserved                                  ADDR_OFFSET   0X88
 	volatile uint32_t DCKCFGR;    // Dedicated Clock Configuration reg         ADDR_OFFSET   0X8C
 } RCC_RegDef_t;
@@ -201,15 +199,15 @@ typedef struct
 /* 6.3.8 RCC_APB2RSTR */
 
 /* 6.3.9 RCC_AHB1ENR */
-#define RCC_AHB1ENR_GPIOA_EN         0
-#define RCC_AHB1ENR_GPIOB_EN         1
-#define RCC_AHB1ENR_GPIOC_EN         2
-#define RCC_AHB1ENR_GPIOD_EN         3
-#define RCC_AHB1ENR_GPIOE_EN         4
-#define RCC_AHB1ENR_GPIOH_EN         7
-#define RCC_AHB1ENR_CRCEN            12
-#define RCC_AHB1ENR_DMA1_EN          21
-#define RCC_AHB1ENR_DMA2_EN          22
+#define RCC_AHB1ENR_GPIOAEN         0
+#define RCC_AHB1ENR_GPIOBEN         1
+#define RCC_AHB1ENR_GPIOCEN         2
+#define RCC_AHB1ENR_GPIODEN         3
+#define RCC_AHB1ENR_GPIOEEN         4
+#define RCC_AHB1ENR_GPIOHEN         7
+#define RCC_AHB1ENR_CRCEN           12
+#define RCC_AHB1ENR_DMA1EN          21
+#define RCC_AHB1ENR_DMA2EN          22
 
 /* 6.3.10 RCC_AHB2ENR */
 /* 6.3.11 RCC_APB1ENR */
@@ -263,72 +261,14 @@ typedef struct
 #define GPIOE ((GPIO_TypeDef *) GPIOE_BASE_ADDR)
 #define GPIOH ((GPIO_TypeDef *) GPIOH_BASE_ADDR)
 
-/* Descripción de cada uno de los registros del periférico (no es necesario para este) */
+/* For testing assert parameters.*/
+#define IS_GPIO_ALL_INSTANCE(GPIOx) (GPIOx == GPIOA) || \
+									(GPIOx == GPIOB) || \
+									(GPIOx == GPIOC) || \
+								    (GPIOx == GPIOD) || \
+									(GPIOx == GPIOE) || \
+									(GPIOx == GPIOH)
 
-/* Valores estándar para las configuraciones */
-/* 8.4.1 GPIOX MODER (dos bit por cada PIN) */
-#define GPIO_MODE_IN		0
-#define GPIO_MODE_OUT		1
-#define GPIO_MODE_ALTFN		2
-#define GPIO_MODE_ANALOG	3
-
-/* 8.4.2 GPIOx_OTYPER (un bit por PIN) */
-#define GPIO_OTYPE_PUSHPULL	    0
-#define GPIO_OTYPE_OPENDRAIN	1
-
-/* 8.4.3 GPIOX_OSPEEDR (dos bit por cada PIN) */
-#define GPIO_OSPEED_LOW		0
-#define GPIO_OSPEED_MEDIU	1
-#define GPIO_OSPEED_FAST	2
-#define GPIO_OSPEED_HIGH	3
-
-/* 8.4.4 GPIOX_PUPDR (dos bit por cada PIN) */
-#define GPIO_PUPDR_NOTHING	0
-#define GPIO_PUPDR_PULLUP	1
-#define GPIO_PUPDR_PULLDOWN	2
-#define GPIO_PUPDR_RESERVED	3
-
-/* 8.4.5 GPIOX IDR (un bit por PIN) este es el registro para leer el estado de un PIN */
-
-/* 8.4.6 GPIOX ODR (un bit por PIN) - este es el registro para escribir el estado de un
- * PIN (1 o 0). Este registro puede ser escrito y leído desde el software, pero no garantiza
- * una escritura "atómica", por lo cual es preferible utilizar el registro BSRR */
-
-/* Definición de los nombres de los pines */
-#define PIN_0			0
-#define PIN_1			1
-#define PIN_2			2
-#define PIN_3			3
-#define PIN_4			4
-#define PIN_5			5
-#define PIN_6			6
-#define PIN_7			7
-#define PIN_8			8
-#define PIN_9			9
-#define PIN_10			10
-#define PIN_11			11
-#define PIN_12			12
-#define PIN_13			13
-#define PIN_14			14
-#define PIN_15			15
-
-/* Definición de las funciones alternativas
-#define AFO			0b0000
-#define AF1			Ob0001
-#define AF2			Ob0010
-#define AF3			0b0011
-#define AF4			Ob0100
-#define AF5			Ob0101
-#define AF6			0b0110
-#define AF7			0b0111
-#define AF8			Ob1000
-#define AF9			Ob1001
-#define AF10		0b1010
-#define AF11		0b1011
-#define AF12		Ob1100
-#define AF13		Ob1101
-#define AF14		Ob1110
-#define AF15 		Ob1111
 
 /*
 typedef struct
