@@ -1,7 +1,7 @@
 /*
  * stm32f4xx_hal.h
  *
- *  Created on: SEptiembre 7
+ *  Created on: Septiembre 12/2023
  *      Author: Cristhian Oviedo
  *
  *Este archivo contiene la informacion mas basica del micro:
@@ -76,9 +76,9 @@
 #define FIR_BASE_ADDR      (AHB1_BASE_ADDR + 0x3C00U)   // Flash Interface Register...
 #define RCC_BASE_ADDR      (AHB1_BASE_ADDR + 0x3800U)
 #define CRC_BASE_ADDR      (AHB1_BASE_ADDR + 0x3000U)
-#define GPIOH_BASE_ADDR    (AHB1_BASE_ADDR + 0x1C00U)
 #define GPIOE_BASE_ADDR    (AHB1_BASE_ADDR + 0x1000U)
-#define GPIOD_BASE_ADDR    (AHB1_BASE_ADDR + 0x0C00U)}
+#define GPIOD_BASE_ADDR    (AHB1_BASE_ADDR + 0x0C00U)
+#define GPIOH_BASE_ADDR    (AHB1_BASE_ADDR + 0x1C00U)
 #define GPIOC_BASE_ADDR    (AHB1_BASE_ADDR + 0x0800U)
 #define GPIOB_BASE_ADDR    (AHB1_BASE_ADDR + 0x0400U)
 #define GPIOA_BASE_ADDR    (AHB1_BASE_ADDR + 0x0000U)
