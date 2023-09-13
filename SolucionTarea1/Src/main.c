@@ -48,6 +48,7 @@ int main(void)
 
 
 	while(1){
+		gpio_TooglePin(&userLed);
 
 	}
 }
