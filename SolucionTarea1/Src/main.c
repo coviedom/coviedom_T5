@@ -154,7 +154,7 @@ int main(void)
 
 	// Se usa el ciclo While para que se continue ejecutando el codigo siempre
 	while(1){
-		//SOLUCION DEL SEGUNDO PUNTO, hay que poner un brake para ver el efecto
+		//SOLUCION DEL SEGUNDO PUNTO, hay que poner un brake para ver el efecto, se prende la luz verde en el propio Micro
 		gpio_TooglePin(&userLed);
 
 		USER_BOTON = gpio_ReadPin(&UserBOTON); // Se lee el estado del boton (0 presionado, 1 sin presionar).
