@@ -26,6 +26,7 @@
 int add(int x, int y);
 
 // Definimos los pines
+GPIO_Handler_t userLed = {0}; // PinA5 pin para la solucion del segundo punto
 GPIO_Handler_t userLed0 = {0}; // PinA7
 GPIO_Handler_t userLed1 = {0}; // PinC8
 GPIO_Handler_t userLed2 = {0}; // PinC7
@@ -36,7 +37,7 @@ GPIO_Handler_t userLed6 = {0}; // PinC9
 GPIO_Handler_t UserBOTON = {0};// Boton
 
 // Definimos todas las variables a utilizar.
-uint8_t segundero = 0;
+uint8_t time = 0;
 uint8_t USER_BOTON = 0;
 uint8_t bit0 = 0;
 uint8_t bit1 = 0;
@@ -46,8 +47,8 @@ uint8_t bit4 = 0;
 uint8_t bit5 = 0;
 uint8_t bit6 = 0;
 
-// Definicion de una funcion llamada EncenderLed (en el punto 3 se explica su funcionamiento)
-void EncenderLed(uint8_t segundero);
+// Definicion de funcion lightLed, luego se la va a utilizar
+void lightLed(uint8_t time);
 
 
 /*
@@ -55,7 +56,15 @@ void EncenderLed(uint8_t segundero);
  *  */
 int main(void)
 {
-	/* Configuramos el pin */
+	/* Configuramos el pin de prueba para el punto 2 */
+	userLed.pGPIOx							= GPIOA;
+	userLed.pinConfig.GPIO_PinNumber		= PIN_5;
+	userLed.pinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
+	userLed.pinConfig.GPIO_PinOutputType	= GPIO_OTYPE_PUSHPULL;
+	userLed.pinConfig.GPIO_PinOutputSpeed	= GPIO_OSPEED_MEDIUM;
+	userLed.pinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
+
+	/* Configuramos el pin A7*/
 	userLed0.pGPIOx							= GPIOA;
 	userLed0.pinConfig.GPIO_PinNumber		= PIN_7;
 	userLed0.pinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
@@ -63,7 +72,8 @@ int main(void)
 	userLed0.pinConfig.GPIO_PinOutputSpeed	= GPIO_OSPEED_MEDIUM;
 	userLed0.pinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
 
-	/* Configuramos el pin */
+
+	/* Configuramos el pin C8 */
 	userLed1.pGPIOx							= GPIOC;
 	userLed1.pinConfig.GPIO_PinNumber		= PIN_8;
 	userLed1.pinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
@@ -71,7 +81,7 @@ int main(void)
 	userLed1.pinConfig.GPIO_PinOutputSpeed	= GPIO_OSPEED_MEDIUM;
 	userLed1.pinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
 
-	/* Configuramos el pin */
+	/* Configuramos el pin C7*/
 	userLed2.pGPIOx							= GPIOC;
 	userLed2.pinConfig.GPIO_PinNumber		= PIN_7;
 	userLed2.pinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
@@ -79,7 +89,7 @@ int main(void)
 	userLed2.pinConfig.GPIO_PinOutputSpeed	= GPIO_OSPEED_MEDIUM;
 	userLed2.pinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
 
-	/* Configuramos el pin */
+	/* Configuramos el pin A6*/
 	userLed3.pGPIOx							= GPIOA;
 	userLed3.pinConfig.GPIO_PinNumber		= PIN_6;
 	userLed3.pinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
@@ -87,7 +97,7 @@ int main(void)
 	userLed3.pinConfig.GPIO_PinOutputSpeed	= GPIO_OSPEED_MEDIUM;
 	userLed3.pinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
 
-	/* Configuramos el pin */
+	/* Configuramos el pin B8*/
 	userLed4.pGPIOx							= GPIOB;
 	userLed4.pinConfig.GPIO_PinNumber		= PIN_8;
 	userLed4.pinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
@@ -95,7 +105,7 @@ int main(void)
 	userLed4.pinConfig.GPIO_PinOutputSpeed	= GPIO_OSPEED_MEDIUM;
 	userLed4.pinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
 
-	/* Configuramos el pin */
+	/* Configuramos el pin C6*/
 	userLed5.pGPIOx							= GPIOC;
 	userLed5.pinConfig.GPIO_PinNumber		= PIN_6;
 	userLed5.pinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
@@ -103,7 +113,7 @@ int main(void)
 	userLed5.pinConfig.GPIO_PinOutputSpeed	= GPIO_OSPEED_MEDIUM;
 	userLed5.pinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
 
-	/* Configuramos el pin */
+	/* Configuramos el pin C9*/
 	userLed6.pGPIOx							= GPIOC;
 	userLed6.pinConfig.GPIO_PinNumber		= PIN_9;
 	userLed6.pinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
@@ -111,7 +121,7 @@ int main(void)
 	userLed6.pinConfig.GPIO_PinOutputSpeed	= GPIO_OSPEED_MEDIUM;
 	userLed6.pinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
 
-	// Se desea configurar el Pin el boton, el cual se encuentra en PC13 (Puerto GPIOC pin 13).
+	// Se configura el Pin Del boton que cual se encuentra en PC13 (Puerto GPIOC Pin 13).
 	UserBOTON.pGPIOx = GPIOC;
 	UserBOTON.pinConfig.GPIO_PinNumber			= PIN_13;
 	UserBOTON.pinConfig.GPIO_PinMode			= GPIO_MODE_IN;
@@ -122,6 +132,7 @@ int main(void)
 
 
 	/* Cargamos la configuración en los registros que gobiernan el puerto */
+	gpio_Config(&userLed);
 	gpio_Config(&userLed0);
 	gpio_Config(&userLed1);
 	gpio_Config(&userLed2);
@@ -132,6 +143,7 @@ int main(void)
 	gpio_Config(&UserBOTON);
 
 	//Haciendo que todos los pines se enciendan
+	gpio_WritePin(&userLed, SET);
 	gpio_WritePin(&userLed0, SET);
 	gpio_WritePin(&userLed1, SET);
 	gpio_WritePin(&userLed2, SET);
@@ -140,37 +152,38 @@ int main(void)
 	gpio_WritePin(&userLed5, SET);
 	gpio_WritePin(&userLed6, SET);
 
-	// Se usa el ciclo While infinito para que se continue ejecutando el codigo
+	// Se usa el ciclo While para que se continue ejecutando el codigo siempre
 	while(1){
-		//Eliminar las barras de comentario de la siguiente linea para el segundo punto
-		//gpio_TooglePin(&userLed);
-		USER_BOTON = gpio_ReadPin(&UserBOTON); // Leemos el estado del boton (0 presionado, 1 sin presionar).
+		//SOLUCION DEL SEGUNDO PUNTO, hay que poner un brake para ver el efecto
+		gpio_TooglePin(&userLed);
 
-		EncenderLed(segundero);   // Se Usa la funcion EncenderLed, la cual se encarga de encender o apagar cada pin
+		USER_BOTON = gpio_ReadPin(&UserBOTON); // Se lee el estado del boton (0 presionado, 1 sin presionar).
 
-		// Hacer que el contador incremente o decremente segun el estado del botón
+		lightLed(time);   //la funcion lightLed se encarga de encender o apagar cada pin
+
+		// El contador incrementa o decrementa segun el estado del botón
 		if(USER_BOTON == 1){
-			segundero += 1;
+			time += 1;
 		}else{
-			segundero -= 1;
+			time -= 1;
 		}
 
 		// Hacer que el contador se reinicie en 1 o en 60 segun sea el estado del boton
-		if(segundero  > 60){
-			segundero = 1;
+		if(time  > 60){
+			time = 1;
 		}
-		if(segundero  < 1){
-			segundero = 60;
+		if(time  < 1){
+			time = 60;
 		}
 
-		// Hacer que el microprocesador ejecute una instruccion que no hace nada por una cantidad muy grande de veces
-		// y que se demore aproximadamente 1 segundo.
-		for (int i=0;(i < 1250000);i++){
+		// Que se ejecute una instruccion que no hace nada por muchas veces
+		// Asi se demora aproximadamente 1 segundo.
+		for (int i=0;(i < 1240000);i++){
 			NOP();
 		}
 
 	}
-} //fin de la funcion mai
+} //fin de la funcion Main
 
 /*
  * Esta función sirve para detectar problemas de parámetros
@@ -181,23 +194,23 @@ void assert_failed(uint8_t* file, uint32_t line){
 		// Problems...
 	}
 }
-void EncenderLed(uint8_t segundero){
+void lightLed(uint8_t time){
 
-	bit0 = segundero & 0b1;
-	bit1 = segundero & 0b1 << 1;          // Se aplica la mascara al valor del segundero
-	bit1 >>= 1;                           // se mueve el bit deseado a la posicion 0
-	bit2 = segundero & 0b1 << 2;
+	bit0 = time & 0b1;
+	bit1 = time & 0b1 << 1; // Acá se aplica la mascara al valor del time
+	bit1 >>= 1;             // Acá se mueve el bit a la posicion 0
+	bit2 = time & 0b1 << 2;
 	bit2 >>= 2;
-	bit3 = segundero & 0b1 << 3;
+	bit3 = time & 0b1 << 3;
 	bit3 >>= 3;
-	bit4 = segundero & 0b1 << 4;
+	bit4 = time & 0b1 << 4;
 	bit4 >>= 4;
-	bit5 = segundero & 0b1 << 5;
+	bit5 = time & 0b1 << 5;
 	bit5 >>= 5;
-	bit6 = segundero & 0b1 << 6;
+	bit6 = time & 0b1 << 6;
 	bit6 >>= 6;
 
-	// depende el valor del bit se enciende o se apaga cada led haciendo uso de la funcion GPIO_WritePin
+	// dependiendo del valor del bit se enciende o se apaga cada led utilizando la función GPIO_WritePin
 	if(bit0 == 1){
 		gpio_WritePin(&userLed0, SET);
 	}else{
