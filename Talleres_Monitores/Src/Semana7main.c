@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 
 int main() {
@@ -34,20 +33,17 @@ int main() {
 	estudiante1.notas[1] = 5;
 	estudiante1.notas[2] = 7;
 
-
-
-	estudiante1.promedio = calif / 3;
-
 	uint8_t sizenotasbytes = sizeof(estudiante1.notas);
 	uint8_t sizeelements = sizeof(estudiante1.notas[0]);
 	uint8_t totalsiez = sizenotasbytes / sizeelements;
 
 	uint16_t calif = 0;
-		for (int i = 0; i < totalsiez; i++) {
+	for (int i = 0; i < totalsiez; i++) {
 
-			elemento = *(estudiante1.notas + i);
-			calif = calif + elemento;
-		}
+		elemento = *(estudiante1.notas + i);
+		calif = calif + elemento;
+	}
+	estudiante1.promedio = calif / 3;
 
 	while (1) {
 
