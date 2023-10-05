@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * @file           : main.c
- * @author         : edperezh@unal.edu.co
+ * @author         : Cristhian Oviedo
  * @brief          : Basic project, base for all new projects
  ******************************************************************************
  */
