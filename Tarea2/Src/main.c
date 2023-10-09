@@ -64,7 +64,7 @@ int main(void) {
 						gpio_WritePin(&_LedDirConteo, SET);
        // Si la bandera del boton inversor es arriba
 	} else if (flagInverter == SET) {
-
+// se apaga el del de direccion del conteo
 						gpio_WritePin(&_LedDirConteo, RESET);
 					}
 		if (flagFlanco == SET) {
