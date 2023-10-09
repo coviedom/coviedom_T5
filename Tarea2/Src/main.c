@@ -2,7 +2,7 @@
  ******************************************************************************
  * @file           : main.c
  * @author         : Cristhian Oviedo
- * @brief          : Basic project, base for all new projects
+ * @brief          : Solución a Tarea 2
  ******************************************************************************
  */
 #include <stdint.h>
@@ -13,43 +13,41 @@
 #include "timer_driver_hal.h"
 
 void initSystem(void);
-void displayWrite(uint8_t number);
-void switchDigit(void);
-void wormPath(uint8_t number);
+void escribirEnDisplay(uint8_t number);
+void infoDisplay(void);
+void banderaInversor(uint8_t number);
 
-// Definimos los pines
-GPIO_Handler_t handlerLedBlinky       = {0};     //PIN A5
-GPIO_Handler_t handlerClockEncoder    = {0};	//PIN A6
-GPIO_Handler_t handlerData            = {0};     //PIN A7
-GPIO_Handler_t handlerbotoninversor   = {0};	//PIN A1
-//los timer de display (de los transistores)y el timer del blinky
-Timer_Handler_t handlerBlinkyTimer3   = {0};
-Timer_Handler_t handlerDisplayTimer5  = {0};
+// Se define los pines
+GPIO_Handler_t _LedBlinky             = {0};    //PIN A5
+GPIO_Handler_t _ClockEncoder          = {0};	//PIN C5
+GPIO_Handler_t _Data                  = {0};    //PIN A6
+GPIO_Handler_t inverterSw             = {0};	//PIN A1
+//Definición de los timer, tanto del display (de los transistores)y el timer del blinky
+Timer_Handler_t _BlinkyTimer3         = {0};
+Timer_Handler_t _DisplayTimer5        = {0};
 //eston son la exti del ClK y de boton de encoder
-EXTI_Config_t exti6Encoder            = {0};
-EXTI_Config_t exti1Button             = {0};
-//led que indica el tipo de modo directo o inverso
-GPIO_Handler_t LedTipoModo            = {0};    // PIN B4
+EXTI_Config_t _Exti5Encoder           = {0};
+EXTI_Config_t _Exti1Botton            = {0};
+//LED indicador de la direccion de modo directo o inverso del conteo
+GPIO_Handler_t _LedDirConteo          = {0};    // PIN A4
 
-//Declaracion de los pines del display
+//Se define los segmentos de los display
 
-GPIO_Handler_t ledA = {0};   		//LED A        	PA3
-GPIO_Handler_t ledB = {0};   		//LED B 		PA4
-GPIO_Handler_t ledC = {0};   		//LED C 		PA11
-GPIO_Handler_t ledD = {0};   		//LED D 		PA2
-GPIO_Handler_t ledE = {0};   		//LED E			PA10
-GPIO_Handler_t ledF = {0};   		//LED F			PA9
-GPIO_Handler_t ledG = {0};   		//LED G			PA8
-GPIO_Handler_t DispUni = {0};   	//ANODO 1	   	PA12
-GPIO_Handler_t DispDec = {0};  		//ANODO 2      	PA0
+GPIO_Handler_t ledA = {0};   		//LED A        	PA10
+GPIO_Handler_t ledB = {0};   		//LED B 		PC4
+GPIO_Handler_t ledC = {0};   		//LED C 		PA0
+GPIO_Handler_t ledD = {0};   		//LED D 		PB5
+GPIO_Handler_t ledE = {0};   		//LED E			PB7
+GPIO_Handler_t ledF = {0};   		//LED F			PB14
+GPIO_Handler_t ledG = {0};   		//LED G			PB10
+GPIO_Handler_t _DispOne = {0};      //ANODO 1	   	PC1
+GPIO_Handler_t _DispTwo = {0};      //ANODO 2      	PC3
 
-//variables a
+//Definición de variables a utilizar
+
 int8_t contador = 0;
-uint8_t modeWorm = 0;
-int8_t banderadeinversor = 0;
-uint8_t buttonFlag = 0;
-
-
+uint8_t flagInverter = 0;
+uint8_t flagFlanco = 0;
 
 
 /*
@@ -60,22 +58,24 @@ int main(void) {
 
 	//Ciclo del programa
 	while (1) {
-		if (modeWorm == RESET) {
+		//Si se presiona el boton del encoder se sube una bandera
+		if (flagInverter == RESET) {
+        //se enciende el led del conteo
+						gpio_WritePin(&_LedDirConteo, SET);
+       // Se
+	} else if (flagInverter == SET) {
 
-						gpio_WritePin(&LedTipoModo, SET);
-	} else if (modeWorm == SET) {
-
-						gpio_WritePin(&LedTipoModo, RESET);
+						gpio_WritePin(&_LedDirConteo, RESET);
 					}
-		if (buttonFlag == SET) {
+		if (flagFlanco == SET) {
 
 					// Se baja la bandera
-			buttonFlag = RESET;
-		uint32_t button = gpio_ReadPin(&handlerData);
-					if (modeWorm == SET && button == RESET) {
+			flagFlanco = RESET;
+		uint32_t _Lectura = gpio_ReadPin(&_Data);
+					if (flagInverter == SET && _Lectura == RESET) {
 						// prender el led del para saber en que lado vamos
 						contador++;
-						//gpio_WritePin(&LedTipoModo, RESET);
+						//gpio_WritePin(&_LedDirConteo, RESET);
 						if (contador > 99) {
 							contador = 99;
 						}
@@ -83,10 +83,10 @@ int main(void) {
 							contador = 0;
 						}
 
-					} else if (modeWorm == SET && button == SET) {
+					} else if (flagInverter == SET && _Lectura == SET) {
 
 						contador--;
-//gpio_WritePin(&LedTipoModo, RESET);
+
 						if (contador > 99) {
 							contador = 99;
 						}
@@ -96,10 +96,9 @@ int main(void) {
 
 					}
 
-					else if (modeWorm == RESET && button == RESET) {
+					else if (flagInverter == RESET && _Lectura == RESET) {
 
 						contador--;
-						//gpio_WritePin(&LedTipoModo, SET);
 
 						if (contador > 99) {
 							contador = 99;
@@ -107,9 +106,8 @@ int main(void) {
 						if (contador < 0) {
 							contador = 0;
 						}
-					} else if (modeWorm == RESET && button == SET) {
+					} else if (flagInverter == RESET && _Lectura == SET) {
 						contador++;
-						//gpio_WritePin(&LedTipoModo, SET);
 
 						if (contador > 99) {
 							contador = 99;
@@ -118,100 +116,37 @@ int main(void) {
 							contador = 0;
 						}
 					}
-
-
-		/*uint32_t button = gpio_ReadPin(&handlerData);
-		if (banderadeinversor == RESET){
-
-		}
-		if (buttonFlag == SET)  {
-
-			// Se baja la bandera
-			buttonFlag = RESET;
-
-
-
-			gpio_WritePin(&LedTipoModo, SET);
-
-
-
-
-			if (button == SET) {
-				// prender el led del para saber en que lado vamos
-				contador++;
-				if (contador > 99) {
-					contador = 99;
-				}
-
-			}
-			if (button == RESET){
-
-				contador--;
-
-				if (contador < 0) {
-					contador = 0;
-				}
-
-			}
-
-		 if (buttonFlag == SET ) {
-
-			  //Se baja la bandera
-			 buttonFlag = RESET;
-
-			gpio_WritePin(&LedTipoModo, RESET);
-
-
-			if (button == SET) {
-
-				contador--;
-
-				if (contador < 0) {
-					contador = 0;
-				}
-			}
-			if (button == RESET) {
-				contador++;
-
-				if (contador > 99) {
-					contador = 99;
-				}
-			}
-		  }*/
-			switchDigit();
+			infoDisplay();
 		}
 
 		}
 	}
 
 
-
-
-
 void initSystem(void) {
 
 	/* Configuramos el pin del blinky */
-	handlerLedBlinky.pGPIOx = GPIOA;
-	handlerLedBlinky.pinConfig.GPIO_PinNumber = PIN_5;
-	handlerLedBlinky.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	handlerLedBlinky.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	handlerLedBlinky.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	handlerLedBlinky.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	gpio_Config(&handlerLedBlinky);
+	_LedBlinky.pGPIOx = GPIOA;
+	_LedBlinky.pinConfig.GPIO_PinNumber = PIN_5;
+	_LedBlinky.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	_LedBlinky.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	_LedBlinky.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	_LedBlinky.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	gpio_Config(&_LedBlinky);
 
-	LedTipoModo.pGPIOx = GPIOB;
-	LedTipoModo.pinConfig.GPIO_PinNumber = PIN_4;
-	LedTipoModo.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	LedTipoModo.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	LedTipoModo.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	LedTipoModo.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	gpio_Config(&LedTipoModo);
+	_LedDirConteo.pGPIOx = GPIOA;
+	_LedDirConteo.pinConfig.GPIO_PinNumber = PIN_4;
+	_LedDirConteo.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	_LedDirConteo.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	_LedDirConteo.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	_LedDirConteo.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	gpio_Config(&_LedDirConteo);
 
 
 
 	//Configuracion ledA
-	ledA.pGPIOx = GPIOC;
-	ledA.pinConfig.GPIO_PinNumber = PIN_3;
+	ledA.pGPIOx = GPIOA;
+	ledA.pinConfig.GPIO_PinNumber = PIN_10;
 	ledA.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	ledA.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	ledA.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
@@ -219,7 +154,7 @@ void initSystem(void) {
 	gpio_Config(&ledA);
 
 	//Configuracion ledB
-	ledB.pGPIOx = GPIOA;
+	ledB.pGPIOx = GPIOC;
 	ledB.pinConfig.GPIO_PinNumber = PIN_4;
 	ledB.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	ledB.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
@@ -229,7 +164,7 @@ void initSystem(void) {
 
 	//Configuracion ledC
 	ledC.pGPIOx = GPIOA;
-	ledC.pinConfig.GPIO_PinNumber = PIN_11;
+	ledC.pinConfig.GPIO_PinNumber = PIN_0;
 	ledC.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	ledC.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	ledC.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
@@ -237,8 +172,8 @@ void initSystem(void) {
 	gpio_Config(&ledC);
 
 	//Configuracion ledD
-	ledD.pGPIOx = GPIOC;
-	ledD.pinConfig.GPIO_PinNumber = PIN_6;
+	ledD.pGPIOx = GPIOB;
+	ledD.pinConfig.GPIO_PinNumber = PIN_5;
 	ledD.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	ledD.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	ledD.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
@@ -246,8 +181,8 @@ void initSystem(void) {
 	gpio_Config(&ledD);
 
 	//Configuracion ledE
-	ledE.pGPIOx = GPIOA;
-	ledE.pinConfig.GPIO_PinNumber = PIN_10;
+	ledE.pGPIOx = GPIOB;
+	ledE.pinConfig.GPIO_PinNumber = PIN_7;
 	ledE.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	ledE.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	ledE.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
@@ -255,8 +190,8 @@ void initSystem(void) {
 	gpio_Config(&ledE);
 
 	//Configuracion ledF
-	ledF.pGPIOx = GPIOA;
-	ledF.pinConfig.GPIO_PinNumber = PIN_9;
+	ledF.pGPIOx = GPIOB;
+	ledF.pinConfig.GPIO_PinNumber = PIN_14;
 	ledF.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	ledF.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	ledF.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
@@ -264,95 +199,95 @@ void initSystem(void) {
 	gpio_Config(&ledF);
 
 	//Configuracion ledG
-	ledG.pGPIOx = GPIOA;
-	ledG.pinConfig.GPIO_PinNumber = PIN_8;
+	ledG.pGPIOx = GPIOB;
+	ledG.pinConfig.GPIO_PinNumber = PIN_10;
 	ledG.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	ledG.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	ledG.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	ledG.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	gpio_Config(&ledG);
 
-	//Configuración inicial del DispUni
-	DispUni.pGPIOx = GPIOA;
-	DispUni.pinConfig.GPIO_PinNumber = PIN_12;
-	DispUni.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	DispUni.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	DispUni.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	DispUni.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	gpio_Config(&DispUni);
+	//Configuración inicial del _DispOne
+	_DispOne.pGPIOx = GPIOC;
+	_DispOne.pinConfig.GPIO_PinNumber = PIN_1;
+	_DispOne.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	_DispOne.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	_DispOne.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	_DispOne.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	gpio_Config(&_DispOne);
 
-	//Configuración inicial del DispDec
-	DispDec.pGPIOx = GPIOA;
-	DispDec.pinConfig.GPIO_PinNumber = PIN_0;
-	DispDec.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	DispDec.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	DispDec.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	DispDec.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	gpio_Config(&DispDec);
+	//Configuración inicial del _DispTwo
+	_DispTwo.pGPIOx = GPIOC;
+	_DispTwo.pinConfig.GPIO_PinNumber = PIN_3;
+	_DispTwo.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	_DispTwo.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	_DispTwo.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	_DispTwo.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	gpio_Config(&_DispTwo);
 
 	/*Configuracion del Data del Encoder
 	 Cuando DATA == 0 el programa muestra los números de forma ascendente con cada
 	 PULL del giro del Encoder y cuando DATA == 1 el programa muestra los números de manera descendente
 	 con cada PULL del giro del Encoder */
-	handlerData.pGPIOx = GPIOA;
-	handlerData.pinConfig.GPIO_PinNumber = PIN_7;
-	handlerData.pinConfig.GPIO_PinMode = GPIO_MODE_IN;
-	handlerData.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	handlerData.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	handlerData.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	gpio_Config(&handlerData);
+	_Data.pGPIOx = GPIOA;
+	_Data.pinConfig.GPIO_PinNumber = PIN_6;
+	_Data.pinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	_Data.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	_Data.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	_Data.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	gpio_Config(&_Data);
 
 	/* Configuracion clock Encoder, con cada PULL del Clock del Encoder el contador aumenta o disminuya según
-	 sea la configuración del Data que se presenta más adelante. */
-	handlerClockEncoder.pGPIOx = GPIOA;
-	handlerClockEncoder.pinConfig.GPIO_PinNumber = PIN_6;
-	handlerClockEncoder.pinConfig.GPIO_PinMode = GPIO_MODE_IN;
-	handlerClockEncoder.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	handlerClockEncoder.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	handlerClockEncoder.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	 sea la configuración del Data 0 o 1. */
+	_ClockEncoder.pGPIOx = GPIOC;
+	_ClockEncoder.pinConfig.GPIO_PinNumber = PIN_5;
+	_ClockEncoder.pinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	_ClockEncoder.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	_ClockEncoder.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	_ClockEncoder.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 
-	exti6Encoder.pGPIOHandler = &handlerClockEncoder;
-	exti6Encoder.edgeType = EXTERNAL_INTERRUPT_FALLING_EDGE;
-	exti_Config(&exti6Encoder);
+	_Exti5Encoder.pGPIOHandler = &_ClockEncoder;
+	_Exti5Encoder.edgeType = EXTERNAL_INTERRUPT_FALLING_EDGE;
+	exti_Config(&_Exti5Encoder);
 
-	/*Configuracion del handlerbotoninversor
+	/*Configuracion del inverterSw
 	 Boton usado para cambiar el sentido del contador */
-	handlerbotoninversor.pGPIOx = GPIOA;
-	handlerbotoninversor.pinConfig.GPIO_PinNumber = PIN_1;
-	handlerbotoninversor.pinConfig.GPIO_PinMode = GPIO_MODE_IN;
-	handlerbotoninversor.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	handlerbotoninversor.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	handlerbotoninversor.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	inverterSw.pGPIOx = GPIOA;
+	inverterSw.pinConfig.GPIO_PinNumber = PIN_1;
+	inverterSw.pinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	inverterSw.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	inverterSw.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	inverterSw.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 
-	exti1Button.pGPIOHandler = &handlerbotoninversor;
-	exti1Button.edgeType = EXTERNAL_INTERRUPT_RISING_EDGE;
-	exti_Config(&exti1Button);
+	_Exti1Botton.pGPIOHandler = &inverterSw;
+	_Exti1Botton.edgeType = EXTERNAL_INTERRUPT_RISING_EDGE;
+	exti_Config(&_Exti1Botton);
 
 	//Configuracion del TIM3
-	handlerBlinkyTimer3.pTIMx = TIM3;
-	handlerBlinkyTimer3.TIMx_Config.TIMx_Prescaler = 16000; // Genera incrementos de 1 ms
-	handlerBlinkyTimer3.TIMx_Config.TIMx_Period = 250; // De la mano con el prescaler
-	handlerBlinkyTimer3.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
-	handlerBlinkyTimer3.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
+	_BlinkyTimer3.pTIMx = TIM3;
+	_BlinkyTimer3.TIMx_Config.TIMx_Prescaler = 16000; // Genera incrementos de 1 ms
+	_BlinkyTimer3.TIMx_Config.TIMx_Period = 250; // De la mano con el prescaler
+	_BlinkyTimer3.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
+	_BlinkyTimer3.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
 	/* Configuramos el Timer3 */
-	timer_Config(&handlerBlinkyTimer3);
+	timer_Config(&_BlinkyTimer3);
 	// Encendemos el Timer3.
-	timer_SetState(&handlerBlinkyTimer3, TIMER_ON);
+	timer_SetState(&_BlinkyTimer3, TIMER_ON);
 
 	//Configuracion del TIM5
-	handlerDisplayTimer5.pTIMx = TIM5;
-	handlerDisplayTimer5.TIMx_Config.TIMx_Prescaler = 16000; // Genera incrementos de 1 ms
-	handlerDisplayTimer5.TIMx_Config.TIMx_Period = 10; // De la mano con el prescaler
-	handlerDisplayTimer5.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
-	handlerDisplayTimer5.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
+	_DisplayTimer5.pTIMx = TIM5;
+	_DisplayTimer5.TIMx_Config.TIMx_Prescaler = 16000; // Genera incrementos de 1 ms
+	_DisplayTimer5.TIMx_Config.TIMx_Period = 10; // De la mano con el prescaler
+	_DisplayTimer5.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
+	_DisplayTimer5.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
 	/* Configuramos el Timer5 */
-	timer_Config(&handlerDisplayTimer5);
+	timer_Config(&_DisplayTimer5);
 	// Encendemos el Timer5.
-	timer_SetState(&handlerDisplayTimer5, TIMER_ON);
+	timer_SetState(&_DisplayTimer5, TIMER_ON);
 
-	gpio_WritePin(&DispUni, SET);
-	gpio_WritePin(&DispDec, RESET);
-	gpio_WritePin(&LedTipoModo, SET);
+	gpio_WritePin(&_DispOne, SET);
+	gpio_WritePin(&_DispTwo, RESET);
+	gpio_WritePin(&_LedDirConteo, SET);
 
 	/* Como el 7 segmentos es anodo común, para cambiar estado Led se debe poner en SET y viceversa
 	 Se apagan todos los Leds */
@@ -368,56 +303,51 @@ void initSystem(void) {
 
 //calllback del timer del Blinkyn
 void Timer3_Callback(void) {
-	gpio_TooglePin(&handlerLedBlinky);
+	//Se enciende y apaga el LED
+	gpio_TooglePin(&_LedBlinky);
 }
 
 //calllback timer de los transistores que controlan el 7 segmento
 void Timer5_Callback(void) {
 
 	//Cada vez que interrumpe TIM5 se cambia el estado de los dos pines para hacer el switch
-	gpio_TooglePin(&DispUni);
-	gpio_TooglePin(&DispDec);
-	switchDigit();
+	gpio_TooglePin(&_DispOne);
+	gpio_TooglePin(&_DispTwo);
+	infoDisplay();
 
 }
 
 
-/*
- * Si el modo inversor está en RESET entonces el programa ejecuta la parte del
- * código que corresponda a la función de subir y bajar el contador del 0 al 99
- * de forma ascendente o descendente
- */
+//callback del boton inversor
 void callback_extInt1(void) {
-
-	modeWorm ^= 1;
+// Cada vez que se presiona el SW del encoder flagInverter cambia su valor alternando de 1 a 0 por el XOR
+	flagInverter ^= 1;
 
 }
-/*
- * Interrupción que activa el modo inversion del contador
- */
 
-//calllback del CLK
-void callback_extInt6(void) {
-	buttonFlag = SET;
+
+//calllback del CLock
+void callback_extInt5(void) {
+	//se sube una bandera si hay una interrupcion girando el encoder
+	flagFlanco = SET;
 
 	/*
 	 * Función que indica qué debe mostrar cada uno de los displays de las unidades y las decenas
 	 */
-
 }
 
-void switchDigit(void) {
-	uint32_t left = gpio_ReadPin(&DispUni);
+void infoDisplay(void) {
+	uint32_t left = gpio_ReadPin(&_DispOne);
 	if (left == SET) {
-		displayWrite(contador / 10);
+		escribirEnDisplay(contador / 10);
 	}
-	uint32_t right = gpio_ReadPin(&DispDec);
+	uint32_t right = gpio_ReadPin(&_DispTwo);
 	if (right == SET) {
-		displayWrite(contador % 10);
+		escribirEnDisplay(contador % 10);
 	}
 }
-
-void displayWrite(uint8_t number) {
+//Funcion que define los numeros dependiendo de los casos
+void escribirEnDisplay(uint8_t number) {
 
 	switch (number) {
 	case 0: {
@@ -539,12 +469,6 @@ void displayWrite(uint8_t number) {
 	}
 
 }
-
-
-/*
- * Función que determina cuales Leds deben estar encendidos dependiendo de la posición
- * en la que se encuentre el gusanito en este momento.
- */
 
 /*
  * Esta funcion sirve para detectar problemas de parametros

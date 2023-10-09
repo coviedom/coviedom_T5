@@ -94,7 +94,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		break;
 	}
 
-		/* Configurando para el todos los pines GPIOX_1*/
+		/* Configurando para todos los pines GPIOX_1*/
 	case 1: {
 		/* SYSCFG_EXTICR1 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -127,7 +127,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		break;
 	}
 
-		/* Configurando para el todos los pines GPIOX_2*/
+		/* Configurando para todos los pines GPIOX_2*/
 	case 2: {
 		/* SYSCFG_EXTICR1 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -159,7 +159,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 
 		break;
 	}
-		/* Configurando para el todos los pines GPIOX_3*/
+		/* Configurando para  todos los pines GPIOX_3*/
 	case 3: {
 		/* SYSCFG_EXTICR1 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -252,7 +252,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		}
 		break;
 	}
-		/* Configurando para el todos los pines GPIOX_6*/
+		/* Configurando para todos los pines GPIOX_6*/
 	case 6: {
 		/* SYSCFG_EXTICR2 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -283,7 +283,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		}
 		break;
 	}
-		/* Configurando para el todos los pines GPIOX_7*/
+		/* Configurando para  todos los pines GPIOX_7*/
 	case 7: {
 		/* SYSCFG_EXTICR2 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -314,7 +314,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		}
 		break;
 	}
-		/* Configurando para el todos los pines GPIOX_8*/
+		/* Configurando para todos los pines GPIOX_8*/
 	case 8: {
 		/* SYSCFG_EXTICR3 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -345,7 +345,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		}
 		break;
 	}
-		/* Configurando para el todos los pines GPIOX_9*/
+		/* Configurando para todos los pines GPIOX_9*/
 	case 9: {
 		/* SYSCFG_EXTICR3 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -375,7 +375,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 			__NOP();
 		}
 	}
-		/* Configurando para el todos los pines GPIOX_10*/
+		/* Configurando para todos los pines GPIOX_10*/
 	case 10: {
 		/* SYSCFG_EXTICR3 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -406,7 +406,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		}
 		break;
 	}
-		/* Configurando para el todos los pines GPIOX_11*/
+		/* Configurando para todos los pines GPIOX_11*/
 	case 11: {
 		/* SYSCFG_EXTICR3 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -437,7 +437,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		}
 		break;
 	}
-		/* Configurando para el todos los pines GPIOX_12*/
+		/* Configurando para todos los pines GPIOX_12*/
 	case 12: {
 		/* SYSCFG_EXTICR4 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -468,7 +468,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		}
 		break;
 	}
-		/* Configurando para el todos los pines GPIOX_12*/
+		/* Configurando para todos los pines GPIOX_13*/
 	case 13: {
 		/* SYSCFG_EXTICR4 */
 		// Limpiamos primero la posición que deseamos configurar
@@ -499,7 +499,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
 		}
 		break;
 	}
-		/* Configurando para el todos los pines GPIOX_14*/
+		/* Configurando para  todos los pines GPIOX_14*/
 	case 14: {
 		/* SYSCFG_EXTICR4 */
 		// Limpiamos primero la posición que deseamos configurar

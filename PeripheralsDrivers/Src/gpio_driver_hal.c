@@ -2,7 +2,7 @@
  * gpio_driver_hal.c
  *
  *  Created on: Sep 6, 2023
- *      Author: edperezh
+ *      Author: Cristhian Oviedo
  */
 
 #include "gpio_driver_hal.h"
