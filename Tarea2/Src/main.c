@@ -62,40 +62,45 @@ int main(void) {
 		if (flagInverter == RESET) {
         //se enciende el led del conteo
 						gpio_WritePin(&_LedDirConteo, SET);
-       // Si la bandera del boton inversor es arriba
+       // Si la bandera del boton inversor esta arriba
 	} else if (flagInverter == SET) {
 // se apaga el del de direccion del conteo
 						gpio_WritePin(&_LedDirConteo, RESET);
 					}
+		// se analiza si se hace un giro del encoder
 		if (flagFlanco == SET) {
 
 					// Se baja la bandera
 			flagFlanco = RESET;
+			// se lee el valor del data para definir si va hacia la izquierda o hacia la derecha
 		uint32_t _Lectura = gpio_ReadPin(&_Data);
+		             //si la bandera del inversor esta arriba y el data en 0 se hace lo siguiente
 					if (flagInverter == SET && _Lectura == RESET) {
-						// prender el led del para saber en que lado vamos
+						// se se cumple se aumenta el contador
 						contador++;
-						//gpio_WritePin(&_LedDirConteo, RESET);
+						//condicion para el limite superior
 						if (contador > 99) {
 							contador = 99;
 						}
+						//condicion para el limite inferior
 						if (contador < 0) {
 							contador = 0;
 						}
-
+                        // si la bandera del inversor esta arriba y el data en 1 se hace lo siguiente
 					} else if (flagInverter == SET && _Lectura == SET) {
-
+                        // si se cumple se disminuye el contador
 						contador--;
-
+                        //condicion para el limite superior
 						if (contador > 99) {
 							contador = 99;
 						}
+						// condicion para el limite inferior
 						if (contador < 0) {
 							contador = 0;
 						}
 
 					}
-
+                    // lo mismo que los casos anteriores  pero de manera contraria para el caso de presionar el boton inversor sw
 					else if (flagInverter == RESET && _Lectura == RESET) {
 
 						contador--;
@@ -116,6 +121,7 @@ int main(void) {
 							contador = 0;
 						}
 					}
+					//que lo mande al display
 			infoDisplay();
 		}
 
