@@ -58,11 +58,11 @@ int main(void) {
 
 	//Ciclo del programa
 	while (1) {
-		//Si se presiona el boton del encoder se sube una bandera
+		//Si la bandera del boton inversor esta abajo:
 		if (flagInverter == RESET) {
         //se enciende el led del conteo
 						gpio_WritePin(&_LedDirConteo, SET);
-       // Se
+       // Si la bandera del boton inversor es arriba
 	} else if (flagInverter == SET) {
 
 						gpio_WritePin(&_LedDirConteo, RESET);
@@ -320,7 +320,7 @@ void Timer5_Callback(void) {
 
 //callback del boton inversor
 void callback_extInt1(void) {
-// Cada vez que se presiona el SW del encoder flagInverter cambia su valor alternando de 1 a 0 por el XOR
+// Bandera que cada vez que se presiona el SW del encoder flagInverter cambia su valor alternando de 1 a 0 por el XOR
 	flagInverter ^= 1;
 
 }
