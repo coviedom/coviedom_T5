@@ -300,10 +300,12 @@ void initSystem(void) {
 	gpio_WritePin(&ledA, RESET);
 	gpio_WritePin(&ledB, RESET);
 	gpio_WritePin(&ledC, RESET);
-	gpio_WritePin(&ledD, RESET);
+	gpio_WritePin(&ledD, SET);
 	gpio_WritePin(&ledE, RESET);
 	gpio_WritePin(&ledF, RESET);
 	gpio_WritePin(&ledG, RESET);
+
+
 
 }
 
