@@ -5,19 +5,19 @@
 #include "timer_driver_hal.h"
 #include "usart_driver_hal.h"
 
-
 // Definimos un pin de prueba
-GPIO_Handler_t userLed = {0};   //PIN A5
+GPIO_Handler_t userLed = { 0 };   //PIN A5
 
 //blinky timer
-Timer_Handler_t blinkTimer = {0};
+Timer_Handler_t blinkTimer = { 0 };
 //comunicacion RS-232 con el PC, ya habilitada en la board Nucleo
 //Utiliza la conexion USB
-USART_Handler_t commSerial = {0};
-GPIO_Handler_t pinTx = {0};
-GPIO_Handler_t pinRx = {0};
+USART_Handler_t commSerial = { 0 };
+GPIO_Handler_t pinTx = { 0 };
+GPIO_Handler_t pinRx = { 0 };
 uint8_t sendMsg = 0;
-char bufferData[64] = {0};
+uint8_t RxData = 0;
+char bufferData[64] = { 0 };
 
 //Definicion de las caberas de las funciones del main
 void initSystem(void);
@@ -33,7 +33,15 @@ int main(void) {
 	while (1) {
 		if (sendMsg) {
 			sendMsg = 0;
-			usart_writeMsg(&commSerial, "Hola Mundo!!\n\r");
+			sprintf(bufferData, "FUNCIONA!! %d \n\r", 23);
+			usart_writeMsg(&commSerial, bufferData);
+		}
+		if(RxData != '\0') {
+			if (RxData == 'h') {
+				sendMsg = 1;
+			}
+			RxData = 0;
+
 		}
 
 	}
@@ -59,13 +67,13 @@ void initSystem(void) {
 	blinkTimer.TIMx_Config.TIMx_Period = 500; // De la mano con el prescaler
 	blinkTimer.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
 	blinkTimer.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
-    // configuramos el timer
+	// configuramos el timer
 	timer_Config(&blinkTimer);
-    //encendemos el timer
+	//encendemos el timer
 	timer_SetState(&blinkTimer, TIMER_ON);
 
 	//configuramos los pines del puerto serial
-    //Pin sobre los que funciona el USART2 (TX)
+	//Pin sobre los que funciona el USART2 (TX)
 	pinTx.pGPIOx = GPIOA;
 	pinTx.pinConfig.GPIO_PinNumber = PIN_2;
 	pinTx.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
@@ -73,7 +81,7 @@ void initSystem(void) {
 	pinTx.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	pinTx.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	gpio_Config(&pinTx);
-    //Pin sobre los que funciona el USART2 (RX)
+	//Pin sobre los que funciona el USART2 (RX)
 	pinRx.pGPIOx = GPIOA;
 	pinRx.pinConfig.GPIO_PinNumber = PIN_3;
 	pinRx.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
@@ -81,23 +89,30 @@ void initSystem(void) {
 	pinRx.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	pinRx.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	gpio_Config(&pinRx);
-    //Configuramos el puerto serial (USART2)
+	//Configuramos el puerto serial (USART2)
 	commSerial.ptrUSARTx = USART2;
-	commSerial.USART_Config.baudrate       = USART_BAUDRATE_115200;
-	commSerial.USART_Config.datasize       = USART_DATASIZE_8BIT;
-	commSerial.USART_Config.parity         = USART_PARITY_NONE;
-	commSerial.USART_Config.stopbits       = USART_STOPBIT_1;
-	commSerial.USART_Config.mode           = USART_MODE_TX;
-	commSerial.USART_Config.enableIntRX    = USART_RX_INTERRUP_DISABLE;
+	commSerial.USART_Config.baudrate = USART_BAUDRATE_115200;
+	commSerial.USART_Config.datasize = USART_DATASIZE_8BIT;
+	commSerial.USART_Config.parity = USART_PARITY_NONE;
+	commSerial.USART_Config.stopbits = USART_STOPBIT_1;
+	commSerial.USART_Config.mode = USART_MODE_RXTX;
+	commSerial.USART_Config.enableIntRX = USART_RX_INTERRUP_ENABLE;
 	usart_Config(&commSerial);
-	usart_WriteChar(&commSerial, '\0');
+
 }
 
 //Overwrite function
 
 void Timer2_Callback(void) {
 	gpio_TooglePin(&userLed);
-	sendMsg = 1;
+	//sendMsg = 1;
+
+}
+
+void usart2_RxCallback(void){
+	//leemos el valor del registro DR, donde se almacena el dato que llega.
+	//Esto además debe bajar la bandera de la interrupción.
+	RxData = usart_getRxData();
 
 }
 //funcion para detectar problemas de parametros incorrectos
