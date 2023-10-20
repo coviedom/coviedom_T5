@@ -87,11 +87,11 @@ static void usart_enable_clock_peripheral(USART_Handler_t *ptrUsartHandler){
 	if(ptrUsartHandler->ptrUSARTx == USART1){
 		RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
 	}
-
+	/* 1.2 Configuramos el USART2 */
 	else if (ptrUsartHandler->ptrUSARTx == USART2){
 		RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 	}
-
+	/* 1.3 Configuramos el USART6 */
 	else if (ptrUsartHandler->ptrUSARTx == USART6){
 		RCC->APB2ENR |= RCC_APB2ENR_USART6EN;
 	}
@@ -315,22 +315,20 @@ int usart_WriteChar(USART_Handler_t *ptrUsartHandler, int dataToSend ){
 	while( !(ptrUsartHandler->ptrUSARTx->SR & USART_SR_TXE)){
 		__NOP();
 	}
-
+    // enviamos la información al Data Register
 	ptrUsartHandler->ptrUSARTx-> DR = dataToSend;
 
 	return dataToSend;
 }
 
-/*
- *
- */
+// Funcion que se encarga se escribir el mensaje
 void usart_writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSend ){
 	while (*msgToSend != '\0') {
 	    	usart_WriteChar(ptrUsartHandler,*msgToSend);
 	    	msgToSend++;
 	    }
 }
-
+//funcion que vamos a utilizar en el Main la cual tiene almacenado la informacion del data register
 uint8_t usart_getRxData(void){
 	return auxRxData;
 }
@@ -344,6 +342,8 @@ void USART2_IRQHandler(void){
     	auxRxData = USART2-> DR;
     	USART2 -> SR &=~USART_SR_RXNE;
     	usart2_RxCallback();
+    	} else if (USART2->SR & USART_SR_TXE){
+    		usart2_TxCallback();
     	}
     }
 
@@ -358,7 +358,9 @@ void USART6_IRQHandler(void){
 	   auxRxData = USART6-> DR;
 	   USART6->SR &=~USART_SR_RXNE;
 	   usart6_RxCallback();
-	   }
+	   } else if (USART6->SR & USART_SR_TXE){
+			usart6_TxCallback();
+		}
 }
 
 /* Handler de la interrupción del USART
@@ -370,6 +372,8 @@ void USART1_IRQHandler(void){
 	   auxRxData = USART1-> DR;
 	   USART1->SR &=~USART_SR_RXNE;
 	   usart1_RxCallback();
+		} else if (USART1->SR & USART_SR_TXE){
+			usart1_TxCallback();
 		}
 }
 
@@ -389,6 +393,27 @@ __attribute__((weak)) void usart2_RxCallback(void){
 }
 
 __attribute__((weak)) void usart6_RxCallback(void){
+	  /* NOTE : This function should not be modified, when the callback is needed,
+	            the BasicTimer_Callback could be implemented in the main file
+	   */
+	__NOP();
+}
+
+__attribute__((weak)) void usart1_TxCallback(void){
+	  /* NOTE : This function should not be modified, when the callback is needed,
+	            the BasicTimer_Callback could be implemented in the main file
+	   */
+	__NOP();
+}
+
+__attribute__((weak)) void usart2_TxCallback(void){
+	  /* NOTE : This function should not be modified, when the callback is needed,
+	            the BasicTimer_Callback could be implemented in the main file
+	   */
+	__NOP();
+}
+
+__attribute__((weak)) void usart6_TxCallback(void){
 	  /* NOTE : This function should not be modified, when the callback is needed,
 	            the BasicTimer_Callback could be implemented in the main file
 	   */
