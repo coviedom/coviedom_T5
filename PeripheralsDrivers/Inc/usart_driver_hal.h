@@ -101,11 +101,6 @@ uint8_t usart_getRxData(void);
 void usart1_RxCallback(void);
 void usart2_RxCallback(void);
 void usart6_RxCallback(void);
-/*FUNCIONES PARA TRANSMISIÓN*/
-uint8_t usart_getTxData(void);
-void usart1_TxCallback(void);
-void usart2_TxCallback(void);
-void usart6_TxCallback(void);
 
 
 #endif /* USART_DRIVER_HAL_H_ */

@@ -342,8 +342,9 @@ void USART2_IRQHandler(void){
     	auxRxData = USART2-> DR;
     	USART2 -> SR &=~USART_SR_RXNE;
     	usart2_RxCallback();
-    	} else if (USART2->SR & USART_SR_TXE){
-    		usart2_TxCallback();
+    	}
+    if (USART2->SR & USART_SR_TXE){
+    	__NOP();
     	}
     }
 
@@ -358,8 +359,9 @@ void USART6_IRQHandler(void){
 	   auxRxData = USART6-> DR;
 	   USART6->SR &=~USART_SR_RXNE;
 	   usart6_RxCallback();
-	   } else if (USART6->SR & USART_SR_TXE){
-			usart6_TxCallback();
+	   }
+	if (USART6->SR & USART_SR_TXE){
+		__NOP();
 		}
 }
 
@@ -372,8 +374,9 @@ void USART1_IRQHandler(void){
 	   auxRxData = USART1-> DR;
 	   USART1->SR &=~USART_SR_RXNE;
 	   usart1_RxCallback();
-		} else if (USART1->SR & USART_SR_TXE){
-			usart1_TxCallback();
+		}
+	if (USART1->SR & USART_SR_TXE){
+		__NOP();
 		}
 }
 
@@ -399,23 +402,3 @@ __attribute__((weak)) void usart6_RxCallback(void){
 	__NOP();
 }
 
-__attribute__((weak)) void usart1_TxCallback(void){
-	  /* NOTE : This function should not be modified, when the callback is needed,
-	            the BasicTimer_Callback could be implemented in the main file
-	   */
-	__NOP();
-}
-
-__attribute__((weak)) void usart2_TxCallback(void){
-	  /* NOTE : This function should not be modified, when the callback is needed,
-	            the BasicTimer_Callback could be implemented in the main file
-	   */
-	__NOP();
-}
-
-__attribute__((weak)) void usart6_TxCallback(void){
-	  /* NOTE : This function should not be modified, when the callback is needed,
-	            the BasicTimer_Callback could be implemented in the main file
-	   */
-	__NOP();
-}
