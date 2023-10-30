@@ -50,7 +50,7 @@ void usart_Config(USART_Handler_t *ptrUsartHandler){
 	ptrUsartHandler->ptrUSARTx->CR2 = 0;
 
 	// Limpiamos el registro DR
-	//ptrUsartHandler->ptrUSARTx->DR = 0;
+	ptrUsartHandler->ptrUSARTx->DR = 0;
 
 	// 2.2 Configuracion del Parity:
 	usart_config_parity(ptrUsartHandler);
