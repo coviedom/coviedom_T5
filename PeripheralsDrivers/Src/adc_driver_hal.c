@@ -1088,7 +1088,7 @@ __attribute__((weak)) void adc_CompleteCallback(void) {
 }
 
 /*con esta funcion configuramos qué pin deseamos que funcione como ADC*/
-void adc_ConfigAnaloogPin(uint8_t adcChannel) {
+void adc_ConfigAnalogPin(uint8_t adcChannel) {
 
 	switch (adcChannel) {
 	case CHANNEL_0:
