@@ -75,22 +75,22 @@ void initSystem(void) {
 	//configuramos los pines del puerto serial
 	//Pin sobre los que funciona el USART2 (TX)
 	pinTx.pGPIOx = GPIOA;
-	pinTx.pinConfig.GPIO_PinNumber = PIN_9;
+	pinTx.pinConfig.GPIO_PinNumber = PIN_11;
 	pinTx.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
-	pinTx.pinConfig.GPIO_PinAltFunMode = AF7;
+	pinTx.pinConfig.GPIO_PinAltFunMode = AF8;
 	pinTx.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	pinTx.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	gpio_Config(&pinTx);
 	//Pin sobre los que funciona el USART2 (RX)
 	pinRx.pGPIOx = GPIOA;
-	pinRx.pinConfig.GPIO_PinNumber = PIN_10;
+	pinRx.pinConfig.GPIO_PinNumber = PIN_12;
 	pinRx.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
-	pinRx.pinConfig.GPIO_PinAltFunMode = AF7;
+	pinRx.pinConfig.GPIO_PinAltFunMode = AF8;
 	pinRx.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	pinRx.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	gpio_Config(&pinRx);
 	//Configuramos el puerto serial (USART2)
-	commSerial.ptrUSARTx = USART1;
+	commSerial.ptrUSARTx = USART6;
 	commSerial.USART_Config.baudrate = USART_BAUDRATE_115200;
 	commSerial.USART_Config.datasize = USART_DATASIZE_8BIT;
 	commSerial.USART_Config.parity = USART_PARITY_NONE;
@@ -109,7 +109,7 @@ void Timer2_Callback(void) {
 
 }
 
-void usart1_RxCallback(void){
+void usart6_RxCallback(void){
 	//leemos el valor del registro DR, donde se almacena el dato que llega.
 	//Esto además debe bajar la bandera de la interrupción.
 	RxData = usart_getRxData();

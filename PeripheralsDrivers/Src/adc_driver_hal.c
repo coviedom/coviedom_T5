@@ -32,6 +32,7 @@ void adc_ConfigSingleChannel(ADC_Config_t *adcConfig) {
 	/*limpiamos los registros antes de comenzar a configurar*/
 	ADC1->CR1 = 0;
 	ADC1->CR2 = 0;
+	ADC1->SQR1 = 0;
 
 	/*Comenzamos la configuracion de ADC1*/
 
@@ -927,7 +928,7 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
  */
 static void adc_set_one_channel_sequence(ADC_Config_t *adcConfig) {
 	ADC1->SQR1 &= ~ADC_SQR1_L;
-
+	ADC1->SQR3 &= ~ADC_SQR3_SQ1;
 	/* Se configura cual es el canal que adquiere la señal ADC*/
 
 	switch (adcConfig->channel) {
