@@ -56,40 +56,73 @@ uint8_t bandera_modo = 0;
 uint8_t bandera_giro = 0;
 uint8_t bandera_adc = 0;
 uint8_t teclado = 0;
-char bufferMsg[128] = {0};
+char buffer_info[128] = {0};
 
 int main(void) {
 	start();
 
 
 	while (1) {
+
 		if (bandera_adc) {
 			bandera_adc = 0;
-			sprintf(bufferMsg,"ADC = %d  = %.2f[V], Canal:%d , Resolución:%d\n\r",_Sensor.adcData,_Sensor.adcData* (float)(3.3 / 4095),contador_sensor,contador_resolucion+1);
-			usart_writeMsg(&usart1, bufferMsg);
+			if (contador_resolucion == 0){
+				sprintf(buffer_info,"ADC = %d  = %.2f[V]   | Sensor:%d con Resolución:%d |\n\r",_Sensor.adcData,_Sensor.adcData* (float)(3.3 / 63),contador_sensor,contador_resolucion+1);
+				usart_writeMsg(&usart1, buffer_info);
+			}
+			if (contador_resolucion == 1){
+				sprintf(buffer_info,"ADC = %d  = %.2f[V]   | Sensor:%d con Resolución:%d |\n\r",_Sensor.adcData,_Sensor.adcData* (float)(3.3 / 255),contador_sensor,contador_resolucion+1);
+				usart_writeMsg(&usart1, buffer_info);
+			}
+			if (contador_resolucion == 2){
+				sprintf(buffer_info,"ADC = %d  = %.2f[V]   | Sensor:%d con Resolución:%d |\n\r",_Sensor.adcData,_Sensor.adcData* (float)(3.3 / 1023),contador_sensor,contador_resolucion+1);
+				usart_writeMsg(&usart1, buffer_info);
+			}
+			if (contador_resolucion == 3){
+				sprintf(buffer_info,"ADC = %d  = %.2f[V]   | Sensor:%d con Resolución:%d |\n\r",_Sensor.adcData,_Sensor.adcData* (float)(3.3 / 4095),contador_sensor,contador_resolucion+1);
+				usart_writeMsg(&usart1, buffer_info);
+			}
 		}
 
 		if (teclado != '\0') {
 
 			if (teclado == 'p') {
-				usart_writeMsg(&usart1, "Testing\n\r");
+				usart_writeMsg(&usart1, "Menu de ayuda:\n j -> Enciende el test de ADC  \n k ->  Detiene el test de ADC \n a -> Aumenta \n d -> Disminuye \n m -> Cambia de modo \n Nota: Por defecto el test esta encendido\n \r");
 				teclado = 0;
 			}
 
-			if (teclado == 'm') {
-				usart_writeMsg(&usart1, "modo!! %d \n\r");
+			if (teclado == 'j') {
+				usart_writeMsg(&usart1, "Test de ADC encendido ! ++++++++++++++++++++++++++++ \n\r");
+				timer_SetState(&timer_refresh, TIMER_ON);
+				teclado = 0;
+			}
+
+			if (teclado == 'k') {
+				usart_writeMsg(&usart1, "Se acaba de detener el test de ADC ! +++++++++++++++\n\r");
+				timer_SetState(&timer_refresh, TIMER_OFF);
+				teclado = 0;
+			}
+
+			if (teclado == 'm'&& bandera_modo == SET ) {
+				usart_writeMsg(&usart1, "¡Cambiando a elegir Resoluciones! *******************\n\r");
+				bandera_modo ^= 1;
+				teclado = 0;
+			}
+			if (teclado == 'm'&& bandera_modo == RESET ) {
+				usart_writeMsg(&usart1, "¡Cambiando a elegir Sensores! ***********************\n\r");
 				bandera_modo ^= 1;
 				teclado = 0;
 			}
 
 			if (teclado == 'a') {
 				if (bandera_modo == SET) {
+					contador_sensor++;
 					if (contador_sensor > 3) {
 						contador_sensor = 3;
 					}
-					contador_sensor++;
-					sprintf(bufferMsg, "canal %d \n\r", contador_sensor);
-					usart_writeMsg(&usart1, bufferMsg);
+
+					sprintf(buffer_info, "Sensor = %d  _________________________________________\n\r", contador_sensor);
+					usart_writeMsg(&usart1, buffer_info);
 
 					if (contador_sensor == 1) {
 						cambiador_de_canal_sensor(&_Sensor, CHANNEL_7);
@@ -108,8 +141,8 @@ int main(void) {
 						contador_resolucion = 3;
 					}
 
-					sprintf(bufferMsg, "resolucion %d \n\r", contador_resolucion+1);
-					usart_writeMsg(&usart1, bufferMsg);
+					sprintf(buffer_info, "Resolucion = %d   ___________________________________\n\r", contador_resolucion+1);
+					usart_writeMsg(&usart1, buffer_info);
 
 
 					if (contador_resolucion == 0) {
@@ -135,14 +168,13 @@ int main(void) {
 
 			if (teclado == 'd') {
 				if (bandera_modo == SET) {
-					sprintf(bufferMsg, "Canal %d \n\r", contador_sensor);
-					usart_writeMsg(&usart1, bufferMsg);
 					contador_sensor--;
-
-
 					if (contador_sensor < 1) {
 						contador_sensor = 1;
 					}
+					sprintf(buffer_info, "Sensor = %d  _________________________________________\n\r", contador_sensor);
+					usart_writeMsg(&usart1, buffer_info);
+
 					if (contador_sensor == 1) {
 						cambiador_de_canal_sensor(&_Sensor, CHANNEL_7);
 					}
@@ -161,8 +193,8 @@ int main(void) {
 					if (contador_resolucion < 0) {
 						contador_resolucion = 0;
 					}
-					sprintf(bufferMsg, "resolucion %d \n\r", contador_resolucion);
-					usart_writeMsg(&usart1, bufferMsg);
+					sprintf(buffer_info, "Resolucion = %d   ___________________________________\n\r", contador_resolucion+1);
+					usart_writeMsg(&usart1, buffer_info);
 
 					teclado = 0;
 
@@ -204,6 +236,10 @@ int main(void) {
 				if (contador_sensor > 3) {
 					contador_sensor = 3;
 				}
+
+				sprintf(buffer_info, "Sensor = %d  _________________________________________\n\r", contador_sensor);
+				usart_writeMsg(&usart1, buffer_info);
+
 				if (contador_sensor == 1) {
 					cambiador_de_canal_sensor(&_Sensor, CHANNEL_7);
 				}
@@ -224,6 +260,10 @@ int main(void) {
 				if (contador_sensor < 1) {
 					contador_sensor = 1;
 				}
+
+				sprintf(buffer_info, "Sensor = %d  _________________________________________\n\r", contador_sensor);
+				usart_writeMsg(&usart1, buffer_info);
+
 				if (contador_sensor == 1) {
 					cambiador_de_canal_sensor(&_Sensor, CHANNEL_7);
 				}
@@ -245,6 +285,10 @@ int main(void) {
 				if (contador_resolucion > 3) {
 					contador_resolucion = 3;
 				}
+
+				sprintf(buffer_info, "Resolucion = %d   ___________________________________\n\r", contador_resolucion+1);
+				usart_writeMsg(&usart1, buffer_info);
+
 				if (contador_resolucion == 0) {
 					 cambiador_de_periodo(&_Sensor, RESOLUTION_6_BIT);
 				}
@@ -266,6 +310,10 @@ int main(void) {
 				if (contador_resolucion < 0) {
 					contador_resolucion = 0;
 				}
+
+				sprintf(buffer_info, "Resolucion = %d   ___________________________________\n\r", contador_resolucion+1);
+				usart_writeMsg(&usart1, buffer_info);
+
 				if (contador_resolucion == 0) {
 					 cambiador_de_periodo(&_Sensor, RESOLUTION_6_BIT);
 				}
@@ -516,6 +564,12 @@ void Timer4_Callback(void) {
 
 void callback_extInt5(void) {
 	bandera_modo ^= 1;
+	if (bandera_modo == SET ) {
+		usart_writeMsg(&usart1, "¡Cambiando a elegir Sensores! ***********************\n\r");
+	}
+	if (bandera_modo == RESET ) {
+		usart_writeMsg(&usart1, "¡Cambiando a elegir Resoluciones! *******************\n\r");
+	}
 
 }
 
