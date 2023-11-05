@@ -17,37 +17,42 @@
 
 /*Se encabezan las funciones a utilizar en el programa*/
 void start(void);
+void mostrar_resultados_test(uint8_t number_resolucion);
+void mostrar_resolucion_elegida(uint8_t num_resolu);
+void mostrar_sensor_elegido(uint8_t num_sensor);
 void cambiador_de_canal_sensor(ADC_Config_t *_ADC, uint16_t _Canal);
 void cambiador_de_resolucion(ADC_Config_t *adc, uint16_t resoluc);
 void enviarInfo_al_7_segmentos(void);
 void establecer_resolucion_en_pantalla(uint8_t resolucion);
 void establecer_sensor_en_pantalla(uint8_t sensor);
-void mostrar_resultados_test(uint8_t number);
 
+/*Se define el Led zul del blinky*/
+GPIO_Handler_t led_Blinky = {0};              //PB10
 
+/*Se definen los segmentos del display*/
+GPIO_Handler_t puntico = {0};                 //PC6
+GPIO_Handler_t segmento_A = {0};   		      //PC12
+GPIO_Handler_t segmento_B = {0};   		      //PC11
+GPIO_Handler_t segmento_C = {0};   		      //PC5
+GPIO_Handler_t segmento_D = {0};   		      //PC9
+GPIO_Handler_t segmento_E = {0};   		      //PC8
+GPIO_Handler_t segmento_G = {0};   		      //PB9
+GPIO_Handler_t transistor_sensores = {0};     //PB6
+GPIO_Handler_t transistor_resoluciones = {0}; //PB8
 
-GPIO_Handler_t led_Blinky = {0};    //pb10
-GPIO_Handler_t puntico = {0};          //pc6
-GPIO_Handler_t segmento_A = {0};   		//pc12
-GPIO_Handler_t segmento_B = {0};   		//pc11
-GPIO_Handler_t segmento_C = {0};   		//pc5
-GPIO_Handler_t segmento_D = {0};   		//pc9
-GPIO_Handler_t segmento_E = {0};   		//pc8
-GPIO_Handler_t segmento_G = {0};   		//pb9
-GPIO_Handler_t transistor_sensores = {0};      //pb6
-GPIO_Handler_t transistor_resoluciones = {0};  //pb8
-
+/*Se definen los timer a utilizar*/
 Timer_Handler_t timer_del_Blinky = {0};
 Timer_Handler_t timer_Display = {0};
-Timer_Handler_t timer_refresh = {0};
+Timer_Handler_t timer_refresh = {0}; /*Este es el timer que actualiza los datos del test ADC*/
 
-EXTI_Config_t exti_del_clock = {0}; // Exti 3
-GPIO_Handler_t clock_del_encoder = {0};	//pc3
-GPIO_Handler_t _Data = {0}; //pc1
+/*Definicion de los pines e interrupciones para lo relacionado al encoder*/
+EXTI_Config_t exti_del_clock = {0};           //Exti 3
+GPIO_Handler_t clock_del_encoder = {0};	      //PC3
+GPIO_Handler_t _Data = {0};                   //PC1
+EXTI_Config_t exti_del_modo = {0};            //Exti 5
+GPIO_Handler_t boton_modo = {0};	          //PB5
 
-EXTI_Config_t exti_del_modo = {0};  //Exti 5
-GPIO_Handler_t boton_modo = {0};	//b5
-
+/*Se define el Usart y sus respectivos pines*/
 GPIO_Handler_t Transmisor = {0};
 GPIO_Handler_t Receptor = {0};
 USART_Handler_t usart1 = {0};
@@ -133,53 +138,21 @@ int main(void) {
 						if (contador_sensor > 3) {
 							contador_sensor = 3;
 						}
+						mostrar_sensor_elegido(contador_sensor);
 
-						sprintf(buffer_info, "Sensor = %d  _______________________________________________\n\r", contador_sensor);
-						usart_writeMsg(&usart1, buffer_info);
-
-						if (contador_sensor == 1) {
-							cambiador_de_canal_sensor(&_Sensor, CHANNEL_7);
-						}
-
-						if (contador_sensor == 2) {
-							cambiador_de_canal_sensor(&_Sensor, CHANNEL_6);
-						}
-						if (contador_sensor == 3) {
-							cambiador_de_canal_sensor(&_Sensor, CHANNEL_5);
-						}
 						teclado = 0;
-					} else if (bandera_modo == RESET) {
+					}
+					else if (bandera_modo == RESET) {
 
 						contador_resolucion++;
+
 						if (contador_resolucion > 3) {
 							contador_resolucion = 3;
 						}
-						if (contador_resolucion == 0){
-							sprintf(buffer_info, "Resolución = 6 Bit   ______________________________________\n\r");
-							usart_writeMsg(&usart1, buffer_info);
-							cambiador_de_resolucion(&_Sensor,RESOLUTION_6_BIT);
-						}
-						if (contador_resolucion == 1){
-							sprintf(buffer_info, "Resolución = 8 Bit   ______________________________________\n\r");
-							usart_writeMsg(&usart1, buffer_info);
-							cambiador_de_resolucion(&_Sensor,
-									RESOLUTION_8_BIT);
-						}
-						if (contador_resolucion == 2){
-							sprintf(buffer_info, "Resolución = 10 Bit  ______________________________________\n\r");
-							usart_writeMsg(&usart1, buffer_info);
-							cambiador_de_resolucion(&_Sensor,
-									RESOLUTION_10_BIT);
-						}
-						if (contador_resolucion == 3){
-							sprintf(buffer_info, "Resolución = 12 Bit  ______________________________________\n\r");
-							usart_writeMsg(&usart1, buffer_info);
-							cambiador_de_resolucion(&_Sensor,
-									RESOLUTION_12_BIT);
-						}
+						mostrar_resolucion_elegida(contador_resolucion);
+
 						teclado = 0;
 					}
-
 				}
 
 				if (teclado == 'd') {
@@ -188,60 +161,26 @@ int main(void) {
 						if (contador_sensor < 1) {
 							contador_sensor = 1;
 						}
-						sprintf(buffer_info, "Sensor = %d  _______________________________________________\n\r", contador_sensor);
-						usart_writeMsg(&usart1, buffer_info);
+						mostrar_sensor_elegido(contador_sensor);
 
-						if (contador_sensor == 1) {
-							cambiador_de_canal_sensor(&_Sensor, CHANNEL_7);
-						}
-
-						if (contador_sensor == 2) {
-							cambiador_de_canal_sensor(&_Sensor, CHANNEL_6);
-						}
-						if (contador_sensor == 3) {
-							cambiador_de_canal_sensor(&_Sensor, CHANNEL_5);
-						}
 						teclado = 0;
 
-					} else if (bandera_modo == RESET) {
+					}
+					else if (bandera_modo == RESET) {
 						contador_resolucion--;
 
 						if (contador_resolucion < 0) {
 							contador_resolucion = 0;
 						}
-						if (contador_resolucion == 0){
-							sprintf(buffer_info, "Resolución = 6 Bit   ______________________________________\n\r");
-							usart_writeMsg(&usart1, buffer_info);
-							cambiador_de_resolucion(&_Sensor,RESOLUTION_6_BIT);
-						}
-						if (contador_resolucion == 1){
-							sprintf(buffer_info, "Resolución = 8 Bit   ______________________________________\n\r");
-							usart_writeMsg(&usart1, buffer_info);
-							cambiador_de_resolucion(&_Sensor,
-									RESOLUTION_8_BIT);
-						}
-						if (contador_resolucion == 2){
-							sprintf(buffer_info, "Resolución = 10 Bit  ______________________________________\n\r");
-							usart_writeMsg(&usart1, buffer_info);
-							cambiador_de_resolucion(&_Sensor,
-									RESOLUTION_10_BIT);
-						}
-						if (contador_resolucion == 3){
-							sprintf(buffer_info, "Resolución = 12 Bit  ______________________________________\n\r");
-							usart_writeMsg(&usart1, buffer_info);
-							cambiador_de_resolucion(&_Sensor,
-									RESOLUTION_12_BIT);
-						}
-						teclado = 0;
+						mostrar_resolucion_elegida(contador_resolucion);
 
+						teclado = 0;
 					}
 				}
-
 			}
 
 
 			if (bandera_giro == SET) {
-
 
 				bandera_giro = RESET;
 
@@ -255,20 +194,7 @@ int main(void) {
 						contador_sensor = 3;
 					}
 
-					sprintf(buffer_info, "Sensor = %d  _______________________________________________\n\r", contador_sensor);
-					usart_writeMsg(&usart1, buffer_info);
-
-					if (contador_sensor == 1) {
-						cambiador_de_canal_sensor(&_Sensor, CHANNEL_7);
-					}
-
-					if (contador_sensor == 2) {
-						cambiador_de_canal_sensor(&_Sensor, CHANNEL_6);
-					}
-					if (contador_sensor == 3) {
-						cambiador_de_canal_sensor(&_Sensor, CHANNEL_5);
-					}
-
+					mostrar_sensor_elegido(contador_sensor);
 				}
 
 				if (bandera_modo == SET && _Lectura == RESET) {
@@ -278,23 +204,9 @@ int main(void) {
 					if (contador_sensor < 1) {
 						contador_sensor = 1;
 					}
-
-					sprintf(buffer_info, "Sensor = %d  _______________________________________________\n\r", contador_sensor);
-					usart_writeMsg(&usart1, buffer_info);
-
-					if (contador_sensor == 1) {
-						cambiador_de_canal_sensor(&_Sensor, CHANNEL_7);
-					}
-
-					if (contador_sensor == 2) {
-						cambiador_de_canal_sensor(&_Sensor, CHANNEL_6);
-					}
-					if (contador_sensor == 3) {
-						cambiador_de_canal_sensor(&_Sensor, CHANNEL_5);
-					}
+					mostrar_sensor_elegido(contador_sensor);
 
 				}
-
 
 				if (bandera_modo == RESET && _Lectura == SET) {
 
@@ -303,30 +215,7 @@ int main(void) {
 					if (contador_resolucion > 3) {
 						contador_resolucion = 3;
 					}
-					if (contador_resolucion == 0){
-						sprintf(buffer_info, "Resolución = 6 Bit   ______________________________________\n\r");
-						usart_writeMsg(&usart1, buffer_info);
-						cambiador_de_resolucion(&_Sensor,RESOLUTION_6_BIT);
-					}
-					if (contador_resolucion == 1){
-						sprintf(buffer_info, "Resolución = 8 Bit   ______________________________________\n\r");
-						usart_writeMsg(&usart1, buffer_info);
-						cambiador_de_resolucion(&_Sensor,
-								RESOLUTION_8_BIT);
-					}
-					if (contador_resolucion == 2){
-						sprintf(buffer_info, "Resolución = 10 Bit  ______________________________________\n\r");
-						usart_writeMsg(&usart1, buffer_info);
-						cambiador_de_resolucion(&_Sensor,
-								RESOLUTION_10_BIT);
-					}
-					if (contador_resolucion == 3){
-						sprintf(buffer_info, "Resolución = 12 Bit  ______________________________________\n\r");
-						usart_writeMsg(&usart1, buffer_info);
-						cambiador_de_resolucion(&_Sensor,
-								RESOLUTION_12_BIT);
-					}
-
+					mostrar_resolucion_elegida(contador_resolucion);
 				}
 
 				if (bandera_modo == RESET && _Lectura == RESET) {
@@ -335,34 +224,11 @@ int main(void) {
 					if (contador_resolucion < 0) {
 						contador_resolucion = 0;
 					}
-					if (contador_resolucion == 0){
-						sprintf(buffer_info, "Resolución = 6 Bit   ______________________________________\n\r");
-						usart_writeMsg(&usart1, buffer_info);
-						cambiador_de_resolucion(&_Sensor,RESOLUTION_6_BIT);
-					}
-					if (contador_resolucion == 1){
-						sprintf(buffer_info, "Resolución = 8 Bit   ______________________________________\n\r");
-						usart_writeMsg(&usart1, buffer_info);
-						cambiador_de_resolucion(&_Sensor,
-								RESOLUTION_8_BIT);
-					}
-					if (contador_resolucion == 2){
-						sprintf(buffer_info, "Resolución = 10 Bit  ______________________________________\n\r");
-						usart_writeMsg(&usart1, buffer_info);
-						cambiador_de_resolucion(&_Sensor,
-								RESOLUTION_10_BIT);
-					}
-					if (contador_resolucion == 3){
-						sprintf(buffer_info, "Resolución = 12 Bit  ______________________________________\n\r");
-						usart_writeMsg(&usart1, buffer_info);
-						cambiador_de_resolucion(&_Sensor,
-								RESOLUTION_12_BIT);
-					}
+					mostrar_resolucion_elegida(contador_resolucion);
 				}
 				enviarInfo_al_7_segmentos();
 			}
 		}
-
 	}
 }
 
@@ -553,23 +419,23 @@ void start(void) {
 	gpio_WritePin(&transistor_resoluciones, RESET);
 
 }
-void mostrar_resultados_test(uint8_t numb) {
+void mostrar_resultados_test(uint8_t number_resolucion) {
 
-	switch (numb) {
+	switch (number_resolucion) {
 	    case Resolucion_6_Bit:
-	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor:%d con Resolución: 6 Bit|\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 63), contador_sensor);
+	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 6 Bit|\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 63), contador_sensor);
 	        usart_writeMsg(&usart1, buffer_info);
 	        break;
 	    case Resolucion_8_Bit:
-	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor:%d con Resolución: 8 Bit |\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 255), contador_sensor);
+	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 8 Bit |\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 255), contador_sensor);
 	        usart_writeMsg(&usart1, buffer_info);
 	        break;
 	    case Resolucion_10_Bit:
-	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor:%d con Resolución: 10 Bit|\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 1023), contador_sensor);
+	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 10 Bit|\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 1023), contador_sensor);
 	        usart_writeMsg(&usart1, buffer_info);
 	        break;
 	    case Resolucion_12_Bit:
-	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor:%d con Resolución: 12 Bit |\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 4095), contador_sensor);
+	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 12 Bit |\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 4095), contador_sensor);
 	        usart_writeMsg(&usart1, buffer_info);
 	        break;
 	    default:
@@ -578,17 +444,64 @@ void mostrar_resultados_test(uint8_t numb) {
 
 }
 
+void mostrar_resolucion_elegida(uint8_t num_resolu) {
+	switch (num_resolu) {
+	    case Resolucion_6_Bit:
+	        sprintf(buffer_info, "Resolución = 6 Bit   ______________________________________\n\r");
+	        usart_writeMsg(&usart1, buffer_info);
+	        cambiador_de_resolucion(&_Sensor, RESOLUTION_6_BIT);
+	        break;
+	    case Resolucion_8_Bit:
+	        sprintf(buffer_info, "Resolución = 8 Bit   ______________________________________\n\r");
+	        usart_writeMsg(&usart1, buffer_info);
+	        cambiador_de_resolucion(&_Sensor, RESOLUTION_8_BIT);
+	        break;
+	    case Resolucion_10_Bit:
+	        sprintf(buffer_info, "Resolución = 10 Bit  ______________________________________\n\r");
+	        usart_writeMsg(&usart1, buffer_info);
+	        cambiador_de_resolucion(&_Sensor, RESOLUTION_10_BIT);
+	        break;
+	    case Resolucion_12_Bit:
+	        sprintf(buffer_info, "Resolución = 12 Bit  ______________________________________\n\r");
+	        usart_writeMsg(&usart1, buffer_info);
+	        cambiador_de_resolucion(&_Sensor, RESOLUTION_12_BIT);
+	        break;
+	    default:
+	        __NOP();
+	        break;
+	}
+}
+
+void mostrar_sensor_elegido(uint8_t num_sensor) {
+
+	sprintf(buffer_info, "Sensor = %d  _______________________________________________\n\r", contador_sensor);
+	usart_writeMsg(&usart1, buffer_info);
+
+	switch (num_sensor) {
+	    case Sensor_1:
+	        cambiador_de_canal_sensor(&_Sensor, CHANNEL_7);
+	        break;
+	    case Sensor_2:
+	        cambiador_de_canal_sensor(&_Sensor, CHANNEL_6);
+	        break;
+	    case Sensor_3:
+	        cambiador_de_canal_sensor(&_Sensor, CHANNEL_5);
+	        break;
+	    default:
+	        __NOP();
+	        break;
+	}
+}
+
 
 void cambiador_de_canal_sensor(ADC_Config_t *_ADC, uint16_t _Canal) {
 	_ADC->channel = _Canal;
 	adc_ConfigSingleChannel(_ADC);
-
 }
 
 void  cambiador_de_resolucion(ADC_Config_t *adc, uint16_t resoluc) {
 	adc->resolution = resoluc;
 	adc_ConfigSingleChannel(adc);
-
 }
 
 void enviarInfo_al_7_segmentos(void) {
@@ -660,7 +573,6 @@ void establecer_resolucion_en_pantalla(uint8_t resolucion) {
 	}
 }
 
-
 void establecer_sensor_en_pantalla(uint8_t sensor) {
 
 	switch (sensor) {
@@ -702,7 +614,7 @@ void establecer_sensor_en_pantalla(uint8_t sensor) {
 	}
 }
 void adc_CompleteCallback(void) {
-	bandera_adc = 1;
+	bandera_adc = SET;
 	_Sensor.adcData = adc_GetValue();
 }
 
