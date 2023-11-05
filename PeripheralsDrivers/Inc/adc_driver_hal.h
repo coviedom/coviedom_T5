@@ -40,7 +40,6 @@ enum{
 	RESOLUTION_10_BIT,
 	RESOLUTION_8_BIT,
 	RESOLUTION_6_BIT
-
 };
 
 enum{
