@@ -228,11 +228,14 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
 			__NOP();
 			break;
 		}
+
 		}
 		break;
 	}
 	case CHANNEL_2: {
+
 		switch (adcConfig->samplingPeriod) {
+
 		case SAMPLING_PERIOD_3_CYCLES:
 			/*Cargar 0b000*/
 			ADC1->SMPR2 &= ~ADC_SMPR2_SMP2;
@@ -277,11 +280,14 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
 			__NOP();
 			break;
 		}
+
 		}
 		break;
 	}
 	case CHANNEL_3: {
+
 		switch (adcConfig->samplingPeriod) {
+
 		case SAMPLING_PERIOD_3_CYCLES:
 			/*Cargar 0b000*/
 			ADC1->SMPR2 &= ~ADC_SMPR2_SMP3;
@@ -326,11 +332,14 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
 			__NOP();
 			break;
 		}
+
 		}
 		break;
 	}
 	case CHANNEL_4: {
+
 		switch (adcConfig->samplingPeriod) {
+
 		case SAMPLING_PERIOD_3_CYCLES:
 			/*Cargar 0b000*/
 			ADC1->SMPR2 &= ~ADC_SMPR2_SMP4;
@@ -375,6 +384,7 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
 			__NOP();
 			break;
 		}
+
 		}
 		break;
 	}
@@ -424,11 +434,14 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
 			__NOP();
 			break;
 		}
+
 		}
 		break;
 	}
 	case CHANNEL_6: {
+
 		switch (adcConfig->samplingPeriod) {
+
 		case SAMPLING_PERIOD_3_CYCLES:
 			/*Cargar 0b000*/
 			ADC1->SMPR2 &= ~ADC_SMPR2_SMP6;
@@ -571,11 +584,13 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
 			__NOP();
 			break;
 		}
+
 		}
 		break;
 	}
 	case CHANNEL_9: {
 		switch (adcConfig->samplingPeriod) {
+
 		case SAMPLING_PERIOD_3_CYCLES:
 			/*Cargar 0b000*/
 			ADC1->SMPR2 &= ~ADC_SMPR2_SMP9;
@@ -911,14 +926,18 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
 			break;
 
 		default: {
+
 			__NOP();
 			break;
 		}
+
 		}
 		break;
 	}
 	default: {
+
 		__NOP();
+
 		break;
 	}
 	}

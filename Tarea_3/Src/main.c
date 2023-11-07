@@ -372,7 +372,7 @@ void start(void) {
 	exti_Config(&exti_del_modo);
 	/*Se congura el usart de comunicacion serial*/
 	usart1.ptrUSARTx = USART1;
-	usart1.USART_Config.baudrate = USART_BAUDRATE_115200;
+	usart1.USART_Config.baudrate = USART_BAUDRATE_68300;
 	usart1.USART_Config.datasize = USART_DATASIZE_8BIT;
 	usart1.USART_Config.parity = USART_PARITY_NONE;
 	usart1.USART_Config.stopbits = USART_STOPBIT_1;
@@ -384,7 +384,7 @@ void start(void) {
 	Transmisor.pinConfig.GPIO_PinNumber = PIN_9;
 	Transmisor.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
 	Transmisor.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	Transmisor.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_MEDIUM;
+	Transmisor.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_HIGH;
 	Transmisor.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	Transmisor.pinConfig.GPIO_PinAltFunMode = AF7;
 	gpio_Config(&Transmisor);
@@ -393,7 +393,7 @@ void start(void) {
 	Receptor.pinConfig.GPIO_PinNumber = PIN_10;
 	Receptor.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
 	Receptor.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	Receptor.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_MEDIUM;
+	Receptor.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_HIGH;
 	Receptor.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	Receptor.pinConfig.GPIO_PinAltFunMode = AF7;
 	gpio_Config(&Receptor);
