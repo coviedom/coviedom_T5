@@ -372,7 +372,7 @@ void start(void) {
 	exti_Config(&exti_del_modo);
 	/*Se congura el usart de comunicacion serial*/
 	usart1.ptrUSARTx = USART1;
-	usart1.USART_Config.baudrate = USART_BAUDRATE_68300;
+	usart1.USART_Config.baudrate = USART_BAUDRATE_9600;
 	usart1.USART_Config.datasize = USART_DATASIZE_8BIT;
 	usart1.USART_Config.parity = USART_PARITY_NONE;
 	usart1.USART_Config.stopbits = USART_STOPBIT_1;
