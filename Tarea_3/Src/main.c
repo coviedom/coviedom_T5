@@ -332,6 +332,8 @@ void start(void) {
 	transistor_sensores.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	transistor_sensores.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	gpio_Config(&transistor_sensores);
+	gpio_WritePin(&transistor_sensores, SET);
+
 	/*Se configura pin del display tipo catodo comun*/
 	transistor_resoluciones.pGPIOx = GPIOB;
 	transistor_resoluciones.pinConfig.GPIO_PinNumber = PIN_8;
@@ -340,6 +342,7 @@ void start(void) {
 	transistor_resoluciones.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	transistor_resoluciones.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	gpio_Config(&transistor_resoluciones);
+	gpio_WritePin(&transistor_resoluciones, RESET);
 	/*Se configura el pin relacionado al Data del encoder */
 	_Data.pGPIOx = GPIOC;
 	_Data.pinConfig.GPIO_PinNumber = PIN_1;
@@ -405,7 +408,7 @@ void start(void) {
 	_Sensor.interrupState = ADC_INT_ENABLE;
 	adc_ConfigSingleChannel(&_Sensor);
 	/*Se configura el timer para el blinky*/
-	timer_del_Blinky.pTIMx = TIM3;
+	timer_del_Blinky.pTIMx = TIM11;
 	timer_del_Blinky.TIMx_Config.TIMx_Prescaler = 16000;
 	timer_del_Blinky.TIMx_Config.TIMx_Period = 250;
 	timer_del_Blinky.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
@@ -417,7 +420,7 @@ void start(void) {
 	/*Se configura el timer para el display a alta frecuencia*/
 	timer_Display.pTIMx = TIM5;
 	timer_Display.TIMx_Config.TIMx_Prescaler = 16000;
-	timer_Display.TIMx_Config.TIMx_Period = 5;
+	timer_Display.TIMx_Config.TIMx_Period = 8;
 	timer_Display.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
 	timer_Display.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
 
@@ -434,8 +437,14 @@ void start(void) {
 	timer_Config(&timer_refresh);
 	timer_SetState(&timer_refresh, TIMER_ON);
 	/*Se establecen en diferentes estados para que prendan de forma alternante*/
-	gpio_WritePin(&transistor_sensores, SET);
-	gpio_WritePin(&transistor_resoluciones, RESET);
+
+
+
+
+
+
+
+
 }
 /*Funcion que permite mostrar el sensor que se está testeando, la resolucion y tambien el voltaje equivalente en Voltios*/
 void mostrar_resultados_test(uint8_t number_resolucion) {
@@ -524,33 +533,71 @@ void  cambiador_de_resolucion(ADC_Config_t *adc, uint16_t resoluc) {
 }
 /*Funcion que se encarga de enviar la informacion que tiene al display*/
 void enviarInfo_al_7_segmentos(void) {
-	/*Se lee el estado del transistor*/
-	uint32_t read1 = gpio_ReadPin(&transistor_sensores);
-	/*Entonces si está en 1 es por que esta encendido el de las resoluciones ya que es de catodo comun*/
-	if (read1 == SET) {
-		/*Funcion encargada de prender los segmentos necesarios en el display para mostrar la resolucion segun sea el contador*/
-		establecer_resolucion_en_pantalla(contador_resolucion);
-		/*Si está en el modo sensores entonces ocurrirá lo que sigue */
-		if (bandera_modo == SET) {
-			/*Se enciende puntico del display del lado de los sensores*/
-			gpio_WritePin(&puntico, SET);
-		}
-	}
+//	gpio_WritePin(&puntico, SET);
+//	gpio_WritePin(&segmento_A, SET);
+//	gpio_WritePin(&segmento_B, SET);
+//	gpio_WritePin(&segmento_C, SET);
+//	gpio_WritePin(&segmento_D, SET);
+//	gpio_WritePin(&segmento_E, SET);
+//	gpio_WritePin(&segmento_G, SET);
 	/*Se lee el estado del transistor*/
 	uint32_t read2 = gpio_ReadPin(&transistor_resoluciones);
+	uint32_t read1 = gpio_ReadPin(&transistor_sensores);
 	/*Entonces si está en 1 es por que esta encendido el de los sensores ya que es de catodo comun*/
-	if (read2 == SET) {
+	if (read2 == RESET) {
+		gpio_WritePin(&transistor_sensores, SET);
+		gpio_WritePin(&transistor_resoluciones, RESET);
+//		gpio_WritePin(&puntico, SET);
+//		gpio_WritePin(&segmento_A, SET);
+//		gpio_WritePin(&segmento_B, SET);
+//		gpio_WritePin(&segmento_C, SET);
+//		gpio_WritePin(&segmento_D, SET);
+//		gpio_WritePin(&segmento_E, SET);
+//		gpio_WritePin(&segmento_G, SET);
 		/*Funcion encargada de prender los segmentos necesarios en el display para mostrar el sensor segun sea el contador*/
 		establecer_sensor_en_pantalla(contador_sensor);
+		gpio_WritePin(&transistor_sensores, RESET);
+
 		/*Si está en el modo resoluciones entonces ocurrirá lo que sigue */
 		if (bandera_modo == RESET) {
 			/*Se enciende puntico del display del lado de las resoluciones*/
 			gpio_WritePin(&puntico, SET);
 		}
 	}
+
+	/*Se lee el estado del transistor*/
+
+	/*Entonces si está en 1 es por que esta encendido el de las resoluciones ya que es de catodo comun*/
+	else if (read1 == RESET) {
+		gpio_WritePin(&transistor_resoluciones, SET);
+		gpio_WritePin(&transistor_sensores, RESET);
+
+		/*Funcion encargada de prender los segmentos necesarios en el display para mostrar la resolucion segun sea el contador*/
+		establecer_resolucion_en_pantalla(contador_resolucion);
+		gpio_WritePin(&transistor_resoluciones, RESET);
+		gpio_WritePin(&transistor_sensores, SET);
+
+		/*Si está en el modo sensores entonces ocurrirá lo que sigue */
+		if (bandera_modo == SET) {
+			/*Se enciende puntico del display del lado de los sensores*/
+			gpio_WritePin(&puntico, SET);
+		}
+	}
+
+
+	else {
+		__NOP();
+	}
 }
 /*Funcion encargada de prender los segmentos necesarios en el display para mostrar la resolucion segun sea el contador*/
 void establecer_resolucion_en_pantalla(uint8_t resolucion) {
+//	gpio_WritePin(&puntico, SET);
+//	gpio_WritePin(&segmento_A, SET);
+//	gpio_WritePin(&segmento_B, SET);
+//	gpio_WritePin(&segmento_C, SET);
+//	gpio_WritePin(&segmento_D, SET);
+//	gpio_WritePin(&segmento_E, SET);
+//	gpio_WritePin(&segmento_G, SET);
 
 	switch (resolucion) {
 
@@ -595,7 +642,13 @@ void establecer_resolucion_en_pantalla(uint8_t resolucion) {
 		break;
 
 	default: {
-		__NOP();
+		gpio_WritePin(&puntico, SET);
+		gpio_WritePin(&segmento_A, SET);
+		gpio_WritePin(&segmento_B, SET);
+		gpio_WritePin(&segmento_C, SET);
+		gpio_WritePin(&segmento_D, SET);
+		gpio_WritePin(&segmento_E, SET);
+		gpio_WritePin(&segmento_G, SET);
 
 		break;
 	}
@@ -603,6 +656,13 @@ void establecer_resolucion_en_pantalla(uint8_t resolucion) {
 }
 /*Funcion encargada de prender los segmentos necesarios en el display para mostrar el sensor segun sea el contador*/
 void establecer_sensor_en_pantalla(uint8_t sensor) {
+//	gpio_WritePin(&puntico, SET);
+//	gpio_WritePin(&segmento_A, SET);
+//	gpio_WritePin(&segmento_B, SET);
+//	gpio_WritePin(&segmento_C, SET);
+//	gpio_WritePin(&segmento_D, SET);
+//	gpio_WritePin(&segmento_E, SET);
+//	gpio_WritePin(&segmento_G, SET);
 
 	switch (sensor) {
 
@@ -637,7 +697,13 @@ void establecer_sensor_en_pantalla(uint8_t sensor) {
 		break;
 
 	default: {
-		__NOP();
+		gpio_WritePin(&puntico, SET);
+		gpio_WritePin(&segmento_A, SET);
+		gpio_WritePin(&segmento_B, SET);
+		gpio_WritePin(&segmento_C, SET);
+		gpio_WritePin(&segmento_D, SET);
+		gpio_WritePin(&segmento_E, SET);
+		gpio_WritePin(&segmento_G, SET);
 		break;
 	}
 	}
@@ -652,14 +718,14 @@ void usart1_RxCallback(void) {
 	teclado = usart_getRxData();
 }
 /*Con esta funcion de interrupcion se cambia el estado del led dependiendo del ARR*/
-void Timer3_Callback(void) {
+void Timer11_Callback(void) {
 	gpio_TooglePin(&led_Blinky);
 }
 /*Con esta funcion de interrupcion se cambia el estado de los dos transistores del display y se envia la info al Display*/
 void Timer5_Callback(void) {
 
-	gpio_TooglePin(&transistor_sensores);
-	gpio_TooglePin(&transistor_resoluciones);
+//	gpio_TooglePin(&transistor_sensores);
+//	gpio_TooglePin(&transistor_resoluciones);
 	enviarInfo_al_7_segmentos();
 }
 /*Con esta funcion de interrupcion se sube la bandera para la actualizacion de datos del ADC y se hace un test de conversion ADC*/

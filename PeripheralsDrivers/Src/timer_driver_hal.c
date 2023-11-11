@@ -301,7 +301,7 @@ void TIM5_IRQHandler(void){
     Timer5_Callback();
 
 }
-void TIM9_IRQHandler(void){
+void TIM1_BRK_TIM9_IRQHandler (void){
     /* Limpiamos la bandera que indica que la interrupción se ha generado */
     TIM9->SR &= ~TIM_SR_UIF;
 
@@ -309,7 +309,7 @@ void TIM9_IRQHandler(void){
     Timer9_Callback();
 
 }
-void TIM10_IRQHandler(void){
+void TIM1_UP_TIM10_IRQHandler (void){
     /* Limpiamos la bandera que indica que la interrupción se ha generado */
     TIM10->SR &= ~TIM_SR_UIF;
 
@@ -317,7 +317,7 @@ void TIM10_IRQHandler(void){
     Timer10_Callback();
 
 }
-void TIM11_IRQHandler(void){
+void TIM1_TRG_COM_TIM11_IRQHandler(void){
     /* Limpiamos la bandera que indica que la interrupción se ha generado */
     TIM11->SR &= ~TIM_SR_UIF;
 

@@ -1,3 +1,10 @@
+/*
+ *  Main de usart
+ *
+ *   Created on: Oct 31, 2023
+ *   	 Author:Cristhian Oviedo
+ */
+
 #include <stdint.h>
 #include <stm32f4xx.h>
 #include <stm32_assert.h>
