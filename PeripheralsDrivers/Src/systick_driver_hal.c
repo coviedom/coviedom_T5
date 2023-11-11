@@ -70,22 +70,22 @@ void config_SysTick_ms(uint8_t systemClock){
 
  }
 
- uint64_t getTicks_ms(void){
+ uint64_t obtener_ticks_ms(void){
  	return ticks;
  }
 
- void delay_ms(uint32_t wait_time_ms){
- 	//captura el primer valor de tiempo para comparar
- 	ticks_start = getTicks_ms();
+ void systick_Delay_ms(uint32_t wait_time_ms){
+ 	/*se toma primer valor de tiempo para comparar*/
+ 	ticks_start = obtener_ticks_ms();
 
- 	//captura el segundo valor de tiempo para comparar
- 	ticks_counting = getTicks_ms();
+ 	/*se tiene el segundo valor del tiempo para comparar*/
+ 	ticks_counting = obtener_ticks_ms();
  	//compara: si el valor "caunting" es menor que el "start + wait"
  	//actualiza el valor "counting"
  	//repite esta operacion hasta que counting sea mayor (se cumple el tiempo de espera)
  	while(ticks_counting < (ticks_start + (uint64_t)wait_time_ms)){
  		//actualizar el valor
- 		ticks_counting = getTicks_ms();
+ 		ticks_counting = obtener_ticks_ms();
  	}
 
  }
@@ -102,3 +102,4 @@ void config_SysTick_ms(uint8_t systemClock){
  	}
 
  }
+

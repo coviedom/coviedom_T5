@@ -2,8 +2,8 @@
  ******************************************************************************
  * @file           : main.c
  * @author         : Cristhian Andrés Oviedo Montalvo
- * @brief          : Solución de la Tarea 3 de Taller 5
- * Fecha           : 29 de octubre 2023
+ * @brief          : Solución a Parcial Taller 5
+ * Fecha           : 11 de Noviembre 2023
  ******************************************************************************
  */
 #include <stdint.h>
@@ -35,7 +35,8 @@ GPIO_Handler_t segmento_A = {0};   		      //PC12
 GPIO_Handler_t segmento_B = {0};   		      //PC11
 GPIO_Handler_t segmento_C = {0};   		      //PC5
 GPIO_Handler_t segmento_D = {0};   		      //PC9
-GPIO_Handler_t segmento_E = {0};   		      //PC8
+GPIO_Handler_t segmento_E = {0};              //PC8
+GPIO_Handler_t segmento_F = {0};              //PC10
 GPIO_Handler_t segmento_G = {0};   		      //PB9
 GPIO_Handler_t transistor_sensores = {0};     //PB6
 GPIO_Handler_t transistor_resoluciones = {0}; //PB8
@@ -65,10 +66,11 @@ ADC_Config_t _Sensor = {0};
  */
 
 /*Se definen los contadores a utilizar en el programa*/
-int8_t contador_sensor = 1;
+int8_t contador_sensor = 0;
 int8_t contador_resolucion = 0;
 
 /*Se definen las banderas a utilizar en el programa*/
+//uint8_t banderadisplay = 0;
 uint8_t bandera_modo = 0;     /*Bandera cuando se presiona el boton o la letra "m"*/
 uint8_t bandera_giro = 0;     /*Bandera cuando se gira el encoder*/
 uint8_t bandera_adc = 0;      /*Bandera cuando se lanza una conversion ADC*/
@@ -133,11 +135,11 @@ int main(void) {
 					teclado = 0;
 				}
 				/*Si se presiona "m" y está en el modo sensores entonces se cambia la bandera para pasar a resoluciones*/
-				else if (teclado == 'm'&& bandera_modo == SET ) {
-					usart_writeMsg(&usart1, "¡Cambiando a elegir Resoluciones! *************************\n\r");
-					bandera_modo ^= 1;
-					teclado = 0;
-				}
+//				else if (teclado == 'm'&& bandera_modo == SET ) {
+//					usart_writeMsg(&usart2, "¡Cambiando a elegir Resoluciones! *************************\n\r");
+//					bandera_modo ^= 1;
+//					teclado = 0;
+//				}
 				/*Si se presiona "m" y está en el modo resoluciones entonces se cambia la bandera para pasar a sensores*/
 				else if (teclado == 'm'&& bandera_modo == RESET ) {
 					usart_writeMsg(&usart1, "¡Cambiando a elegir Sensores! *****************************\n\r");
@@ -150,33 +152,37 @@ int main(void) {
 					if (bandera_modo == SET) {
 						/*El contador del sensor se incrementa en una unidad */
 						contador_sensor++;
+						usart_writeMsg(&usart1, "CW Aumenta \n\r");
+
 						/*Se establece un limite superior*/
-						if (contador_sensor > 3) {
-							contador_sensor = 3;
+						if (contador_sensor > 9) {
+							contador_sensor = 9;
 						}
 						/*Funcion que muestra el sensor que se elije*/
 						mostrar_sensor_elegido(contador_sensor);
 						teclado = 0;
 					}
 					/*Si está en el modo sensores entonces ocurrirá lo que sigue */
-					else if (bandera_modo == RESET) {
-						/*El contador de las resoluciones se incrementa en una unidad */
-						contador_resolucion++;
-						/*Se establece un limite superior*/
-						if (contador_resolucion > 3) {
-							contador_resolucion = 3;
-						}
-						/*Funcion que muestra la resolucion que se elije*/
-						mostrar_resolucion_elegida(contador_resolucion);
-						teclado = 0;
-					}
+//					else if (bandera_modo == RESET) {
+//						/*El contador de las resoluciones se incrementa en una unidad */
+//						contador_resolucion++;
+//						/*Se establece un limite superior*/
+//						if (contador_resolucion > 3) {
+//							contador_resolucion = 3;
+//						}
+//						/*Funcion que muestra la resolucion que se elije*/
+//						mostrar_resolucion_elegida(contador_resolucion);
+//						teclado = 0;
+//					}
 				 }
 				/*Si se presiona la letra "a" ocurrirá lo que sigue*/
 				else if (teclado == 'd') {
 					/*Si está en el modo sensores entonces ocurrirá lo que sigue */
-					if (bandera_modo == SET) {
+					if (bandera_modo == RESET) {
 						/*El contador del sensor se dismnuirá en una unidad */
 						contador_sensor--;
+						usart_writeMsg(&usart1, "CCW Disminuye \n\r");
+
 						/*Se establece un limite inferior*/
 						if (contador_sensor < 1) {
 							contador_sensor = 1;
@@ -186,17 +192,17 @@ int main(void) {
 						teclado = 0;
 					}
 					/*Si está en el modo resoluciones entonces ocurrirá lo que sigue */
-					else if (bandera_modo == RESET) {
-						/*El contador de la resolucion se dismnuirá en una unidad */
-						contador_resolucion--;
-						/*Se establece un limite inferior*/
-						if (contador_resolucion < 0) {
-							contador_resolucion = 0;
-						}
-						/*Funcion que muestra la resolucion que se elije*/
-						mostrar_resolucion_elegida(contador_resolucion);
-						teclado = 0;
-					}
+//					else if (bandera_modo == RESET) {
+//						/*El contador de la resolucion se dismnuirá en una unidad */
+//						contador_resolucion--;
+//						/*Se establece un limite inferior*/
+//						if (contador_resolucion < 0) {
+//							contador_resolucion = 0;
+//						}
+//						/*Funcion que muestra la resolucion que se elije*/
+//						mostrar_resolucion_elegida(contador_resolucion);
+//						teclado = 0;
+//					}
 				}
 				else {
 					__NOP();
@@ -210,47 +216,51 @@ int main(void) {
 				/*Se lee el estado del data encoder*/
 				uint32_t _Lectura = gpio_ReadPin(&_Data);
 				/*Si está en el modo sensores y el data es 1, osea giro a la derecha entonces ocurrirá lo que sigue*/
-				if (bandera_modo == SET && _Lectura == SET) {
+				if (bandera_modo == SET) {
+					bandera_modo = RESET;
 					/*Se incrementa el contador del sensor*/
 					contador_sensor++;
+
+					usart_writeMsg(&usart1, "CW Aumenta \n\r");
 					/*Se establece un limite superior*/
-					if (contador_sensor > 3) {
-						contador_sensor = 3;
+					if (contador_sensor > 9) {
+						contador_sensor = 9;
 					}
 					/*Funcion que muestra el sensor que se elije*/
 					mostrar_sensor_elegido(contador_sensor);
 				}
 				/*Si está en el modo sensores y el data es 0, osea giro a la izquierda entonces ocurrirá lo que sigue*/
-				else if (bandera_modo == SET && _Lectura == RESET) {
+				else if (bandera_modo == RESET && _Lectura == RESET) {
 					/*Se disminuye el contador del sensor*/
 					contador_sensor--;
+					usart_writeMsg(&usart1, "CCW Disminuye \n\r");
 					/*Se establece un limite inferiorr*/
-					if (contador_sensor < 1) {
-						contador_sensor = 1;
+					if (contador_sensor < 0) {
+						contador_sensor = 0;
 					}
 					/*Funcion que muestra el sensor que se elije*/
 					mostrar_sensor_elegido(contador_sensor);
 				}
 				/*Si está en el modo resoluciones y el data es 1, osea giro a la derecha entonces ocurrirá lo que sigue*/
-				else if (bandera_modo == RESET && _Lectura == SET) {
-					/*Se aumenta el contador de la resolucion*/
-					contador_resolucion++;
-					/*Se establece un limite superior*/
-					if (contador_resolucion > 3) {
-						contador_resolucion = 3;
-					}
-					/*Funcion que muestra la resolucion que se elije*/
-					mostrar_resolucion_elegida(contador_resolucion);
-				}
+//				else if (bandera_modo == RESET && _Lectura == SET) {
+//					/*Se aumenta el contador de la resolucion*/
+//					contador_resolucion++;
+//					/*Se establece un limite superior*/
+//					if (contador_resolucion > 3) {
+//						contador_resolucion = 3;
+//					}
+//					/*Funcion que muestra la resolucion que se elije*/
+//					mostrar_resolucion_elegida(contador_resolucion);
+//				}
 				/*Si está en el modo resoluciones y el data es 0, osea giro a la izquierda entonces ocurrirá lo que sigue*/
-				else if (bandera_modo == RESET && _Lectura == RESET) {
-					contador_resolucion--;
-					if (contador_resolucion < 0) {
-						contador_resolucion = 0;
-					}
-					/*Funcion que muestra la resolucion que se elije*/
-					mostrar_resolucion_elegida(contador_resolucion);
-				}
+//				else if (bandera_modo == RESET && _Lectura == RESET) {
+//					contador_resolucion--;
+//					if (contador_resolucion < 0) {
+//						contador_resolucion = 0;
+//					}
+//					/*Funcion que muestra la resolucion que se elije*/
+//					mostrar_resolucion_elegida(contador_resolucion);
+//				}
 				else {
 					__NOP();
 				}
@@ -308,6 +318,14 @@ void start(void) {
 	segmento_E.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	segmento_E.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	gpio_Config(&segmento_E);
+
+	segmento_F.pGPIOx = GPIOC;
+	segmento_F.pinConfig.GPIO_PinNumber = PIN_10;
+	segmento_F.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
+	segmento_F.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	segmento_F.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	segmento_F.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	gpio_Config(&segmento_F);
 	/*Se configura el segmento G del display*/
 	segmento_G.pGPIOx = GPIOB;
 	segmento_G.pinConfig.GPIO_PinNumber = PIN_9;
@@ -371,8 +389,8 @@ void start(void) {
 	exti_del_modo.edgeType = EXTERNAL_INTERRUPT_RISING_EDGE;
 	exti_Config(&exti_del_modo);
 	/*Se congura el usart de comunicacion serial*/
-	usart1.ptrUSARTx = USART1;
-	usart1.USART_Config.baudrate = USART_BAUDRATE_9600;
+	usart1.ptrUSARTx = USART2;
+	usart1.USART_Config.baudrate = USART_BAUDRATE_115200;
 	usart1.USART_Config.datasize = USART_DATASIZE_8BIT;
 	usart1.USART_Config.parity = USART_PARITY_NONE;
 	usart1.USART_Config.stopbits = USART_STOPBIT_1;
@@ -381,7 +399,7 @@ void start(void) {
 	usart_Config(&usart1);
 	/*Se configura el pin transmisor*/
 	Transmisor.pGPIOx = GPIOA;
-	Transmisor.pinConfig.GPIO_PinNumber = PIN_9;
+	Transmisor.pinConfig.GPIO_PinNumber = PIN_2;
 	Transmisor.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
 	Transmisor.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	Transmisor.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_HIGH;
@@ -390,7 +408,7 @@ void start(void) {
 	gpio_Config(&Transmisor);
 	/*Se configura el pin receptor*/
 	Receptor.pGPIOx = GPIOA;
-	Receptor.pinConfig.GPIO_PinNumber = PIN_10;
+	Receptor.pinConfig.GPIO_PinNumber = PIN_3;
 	Receptor.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
 	Receptor.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	Receptor.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_HIGH;
@@ -399,15 +417,16 @@ void start(void) {
 	gpio_Config(&Receptor);
 	/*Se configura el ADC*/
 	_Sensor.channel = CHANNEL_7;
-	_Sensor.resolution = RESOLUTION_6_BIT;
+	_Sensor.resolution = RESOLUTION_12_BIT;
 	_Sensor.dataAlignment = ALIGNMENT_RIGHT;
 	_Sensor.samplingPeriod = SAMPLING_PERIOD_84_CYCLES;
 	_Sensor.interrupState = ADC_INT_ENABLE;
 	adc_ConfigSingleChannel(&_Sensor);
+
 	/*Se configura el timer para el blinky*/
 	timer_del_Blinky.pTIMx = TIM3;
 	timer_del_Blinky.TIMx_Config.TIMx_Prescaler = 16000;
-	timer_del_Blinky.TIMx_Config.TIMx_Period = 250;
+	timer_del_Blinky.TIMx_Config.TIMx_Period = 500;
 	timer_del_Blinky.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
 	timer_del_Blinky.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
 
@@ -434,75 +453,77 @@ void start(void) {
 	timer_Config(&timer_refresh);
 	timer_SetState(&timer_refresh, TIMER_ON);
 	/*Se establecen en diferentes estados para que prendan de forma alternante*/
-	gpio_WritePin(&transistor_sensores, SET);
 	gpio_WritePin(&transistor_resoluciones, RESET);
+	gpio_WritePin(&transistor_sensores, SET);
+
 	gpio_WritePin(&puntico, RESET);
 	gpio_WritePin(&segmento_A, RESET);
 	gpio_WritePin(&segmento_B, RESET);
 	gpio_WritePin(&segmento_C, RESET);
 	gpio_WritePin(&segmento_D, RESET);
 	gpio_WritePin(&segmento_E, RESET);
+	gpio_WritePin(&segmento_F, RESET);
 	gpio_WritePin(&segmento_G, RESET);
 
 }
 /*Funcion que permite mostrar el sensor que se está testeando, la resolucion y tambien el voltaje equivalente en Voltios*/
 void mostrar_resultados_test(uint8_t number_resolucion) {
 
-	switch (number_resolucion) {
-	    case Resolucion_6_Bit:
-	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 6 Bit|\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 63), contador_sensor);
-	        usart_writeMsg(&usart1, buffer_info);
-	        break;
-	    case Resolucion_8_Bit:
-	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 8 Bit |\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 255), contador_sensor);
-	        usart_writeMsg(&usart1, buffer_info);
-	        break;
-	    case Resolucion_10_Bit:
-	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 10 Bit|\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 1023), contador_sensor);
-	        usart_writeMsg(&usart1, buffer_info);
-	        break;
-	    case Resolucion_12_Bit:
+//	switch (number_resolucion) {
+//	    case Resolucion_6_Bit:
+//	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 6 Bit|\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 63), contador_sensor);
+//	        usart_writeMsg(&usart1, buffer_info);
+//	        break;
+//	    case Resolucion_8_Bit:
+//	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 8 Bit |\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 255), contador_sensor);
+//	        usart_writeMsg(&usart1, buffer_info);
+//	        break;
+//	    case Resolucion_10_Bit:
+//	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 10 Bit|\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 1023), contador_sensor);
+//	        usart_writeMsg(&usart1, buffer_info);
+//	        break;
+//	    case Resolucion_12_Bit:
 	        sprintf(buffer_info, "ADC = %d  = %.2f[V]   | Sensor: %d con Resolución: 12 Bit |\n\r", _Sensor.adcData, _Sensor.adcData * (float)(3.3 / 4095), contador_sensor);
 	        usart_writeMsg(&usart1, buffer_info);
-	        break;
-	    default:
-	        __NOP();
-	}
+//	        break;
+//	    default:
+//	        __NOP();
+//	}
 }
 /*Funcion que muestra la resolucion que se elije*/
-void mostrar_resolucion_elegida(uint8_t num_resolu) {
-	switch (num_resolu) {
-	    case Resolucion_6_Bit:
-	        sprintf(buffer_info, "Resolución = 6 Bit   ______________________________________\n\r");
-	        usart_writeMsg(&usart1, buffer_info);
-	        /*Funcion encargada de cambiar la resolucion*/
-	        cambiador_de_resolucion(&_Sensor, RESOLUTION_6_BIT);
-	        break;
-	    case Resolucion_8_Bit:
-	        sprintf(buffer_info, "Resolución = 8 Bit   ______________________________________\n\r");
-	        usart_writeMsg(&usart1, buffer_info);
-	        cambiador_de_resolucion(&_Sensor, RESOLUTION_8_BIT);
-	        break;
-	    case Resolucion_10_Bit:
-	        sprintf(buffer_info, "Resolución = 10 Bit  ______________________________________\n\r");
-	        usart_writeMsg(&usart1, buffer_info);
-	        cambiador_de_resolucion(&_Sensor, RESOLUTION_10_BIT);
-	        break;
-	    case Resolucion_12_Bit:
-	        sprintf(buffer_info, "Resolución = 12 Bit  ______________________________________\n\r");
-	        usart_writeMsg(&usart1, buffer_info);
-	        cambiador_de_resolucion(&_Sensor, RESOLUTION_12_BIT);
-	        break;
-	    default:
-	        __NOP();
-	        break;
-	}
-}
+//void mostrar_resolucion_elegida(uint8_t num_resolu) {
+//	switch (num_resolu) {
+//	    case Resolucion_6_Bit:
+//	        sprintf(buffer_info, "Resolución = 6 Bit   ______________________________________\n\r");
+//	        usart_writeMsg(&usart1, buffer_info);
+//	        /*Funcion encargada de cambiar la resolucion*/
+//	        cambiador_de_resolucion(&_Sensor, RESOLUTION_6_BIT);
+//	        break;
+//	    case Resolucion_8_Bit:
+//	        sprintf(buffer_info, "Resolución = 8 Bit   ______________________________________\n\r");
+//	        usart_writeMsg(&usart1, buffer_info);
+//	        cambiador_de_resolucion(&_Sensor, RESOLUTION_8_BIT);
+//	        break;
+//	    case Resolucion_10_Bit:
+//	        sprintf(buffer_info, "Resolución = 10 Bit  ______________________________________\n\r");
+//	        usart_writeMsg(&usart1, buffer_info);
+//	        cambiador_de_resolucion(&_Sensor, RESOLUTION_10_BIT);
+//	        break;
+//	    case Resolucion_12_Bit:
+//	        sprintf(buffer_info, "Resolución = 12 Bit  ______________________________________\n\r");
+//	        usart_writeMsg(&usart1, buffer_info);
+//	        cambiador_de_resolucion(&_Sensor, RESOLUTION_12_BIT);
+//	        break;
+//	    default:
+//	        __NOP();
+//	        break;
+//	}
+//}
 /*Funcion que muestra el sensor que se elije*/
 void mostrar_sensor_elegido(uint8_t num_sensor) {
 
-	sprintf(buffer_info, "Sensor = %d  _______________________________________________\n\r", contador_sensor);
-	usart_writeMsg(&usart1, buffer_info);
+//	sprintf(buffer_info, "Sensor = %d  _______________________________________________\n\r", contador_sensor);
+//	usart_writeMsg(&usart1, buffer_info);
 
 	switch (num_sensor) {
 	    case Sensor_1:
@@ -526,24 +547,35 @@ void cambiador_de_canal_sensor(ADC_Config_t *_ADC, uint16_t _Canal) {
 	adc_ConfigSingleChannel(_ADC);
 }
 /*Funcion encargada de cambiar la resolucion*/
-void  cambiador_de_resolucion(ADC_Config_t *adc, uint16_t resoluc) {
-	adc->resolution = resoluc;
-	adc_ConfigSingleChannel(adc);
-}
+//void  cambiador_de_resolucion(ADC_Config_t *adc, uint16_t resoluc) {
+//	adc->resolution = resoluc;
+//	adc_ConfigSingleChannel(adc);
+//}
 /*Funcion que se encarga de enviar la informacion que tiene al display*/
 void enviarInfo_al_7_segmentos(void) {
+
+//	if (banderadisplay){
+//		establecer_resolucion_en_pantalla(contador_resolucion);
+//		gpio_TooglePin(&transistor_resoluciones);
+//		gpio_TooglePin(&transistor_sensores);
+//	}
+//	else {
+//		establecer_sensor_en_pantalla(contador_sensor);
+//		gpio_TooglePin(&transistor_sensores);
+//		gpio_TooglePin(&transistor_resoluciones);
+//	}
 	/*Se lee el estado del transistor*/
-	uint32_t read1 = gpio_ReadPin(&transistor_sensores);
-	/*Entonces si está en 1 es por que esta encendido el de las resoluciones ya que es de catodo comun*/
-	if (read1 == RESET) {
-		/*Funcion encargada de prender los segmentos necesarios en el display para mostrar la resolucion segun sea el contador*/
-		establecer_resolucion_en_pantalla(contador_resolucion);
-		/*Si está en el modo sensores entonces ocurrirá lo que sigue */
-		if (bandera_modo == SET) {
-			/*Se enciende puntico del display del lado de los sensores*/
-			gpio_WritePin(&puntico, SET);
-		}
-	}
+//	uint32_t read1 = gpio_ReadPin(&transistor_sensores);
+//	/*Entonces si está en 1 es por que esta encendido el de las resoluciones ya que es de catodo comun*/
+//	if (read1 == RESET) {
+//		/*Funcion encargada de prender los segmentos necesarios en el display para mostrar la resolucion segun sea el contador*/
+//		establecer_resolucion_en_pantalla(contador_resolucion);
+//		/*Si está en el modo sensores entonces ocurrirá lo que sigue */
+//		if (bandera_modo == SET) {
+//			/*Se enciende puntico del display del lado de los sensores*/
+//			gpio_WritePin(&puntico, SET);
+//		}
+//	}
 	/*Se lee el estado del transistor*/
 	uint32_t read2 = gpio_ReadPin(&transistor_resoluciones);
 	/*Entonces si está en 1 es por que esta encendido el de los sensores ya que es de catodo comun*/
@@ -553,101 +585,196 @@ void enviarInfo_al_7_segmentos(void) {
 		/*Si está en el modo resoluciones entonces ocurrirá lo que sigue */
 		if (bandera_modo == RESET) {
 			/*Se enciende puntico del display del lado de las resoluciones*/
-			gpio_WritePin(&puntico, SET);
+			gpio_WritePin(&puntico, RESET);
 		}
 	}
 }
 /*Funcion encargada de prender los segmentos necesarios en el display para mostrar la resolucion segun sea el contador*/
-void establecer_resolucion_en_pantalla(uint8_t resolucion) {
-
-	switch (resolucion) {
-
-	case Resolucion_6_Bit:
-		gpio_WritePin(&puntico, RESET);
-		gpio_WritePin(&segmento_A, SET);
-		gpio_WritePin(&segmento_B, SET);
-		gpio_WritePin(&segmento_C, SET);
-		gpio_WritePin(&segmento_D, SET);
-		gpio_WritePin(&segmento_E, RESET);
-		gpio_WritePin(&segmento_G, SET);
-		break;
-
-	case Resolucion_8_Bit:
-		gpio_WritePin(&puntico, RESET);
-		gpio_WritePin(&segmento_A, SET);
-		gpio_WritePin(&segmento_B, SET);
-		gpio_WritePin(&segmento_C, SET);
-		gpio_WritePin(&segmento_D, RESET);
-		gpio_WritePin(&segmento_E, SET);
-		gpio_WritePin(&segmento_G, SET);
-		break;
-
-	case Resolucion_10_Bit:
-		gpio_WritePin(&puntico, RESET);
-		gpio_WritePin(&segmento_A, SET);
-		gpio_WritePin(&segmento_B, SET);
-		gpio_WritePin(&segmento_C, SET);
-		gpio_WritePin(&segmento_D, RESET);
-		gpio_WritePin(&segmento_E, SET);
-		gpio_WritePin(&segmento_G, RESET);
-		break;
-
-	case Resolucion_12_Bit:
-		gpio_WritePin(&puntico, RESET);
-		gpio_WritePin(&segmento_A, RESET);
-		gpio_WritePin(&segmento_B, SET);
-		gpio_WritePin(&segmento_C, SET);
-		gpio_WritePin(&segmento_D, RESET);
-		gpio_WritePin(&segmento_E, SET);
-		gpio_WritePin(&segmento_G, RESET);
-		break;
-
-	default: {
-		__NOP();
-
-		break;
-	}
-	}
-}
+//void establecer_resolucion_en_pantalla(uint8_t resolucion) {
+//
+//	switch (resolucion) {
+//
+//	case Resolucion_6_Bit:
+//		gpio_WritePin(&puntico, SET);
+//		gpio_WritePin(&segmento_A, SET);
+//		gpio_WritePin(&segmento_B, SET);
+//		gpio_WritePin(&segmento_C, SET);
+//		gpio_WritePin(&segmento_D, SET);
+//		gpio_WritePin(&segmento_E, RESET);
+//		gpio_WritePin(&segmento_G, SET);
+//		break;
+//
+//	case Resolucion_8_Bit:
+//		gpio_WritePin(&puntico, RESET);
+//		gpio_WritePin(&segmento_A, SET);
+//		gpio_WritePin(&segmento_B, SET);
+//		gpio_WritePin(&segmento_C, SET);
+//		gpio_WritePin(&segmento_D, RESET);
+//		gpio_WritePin(&segmento_E, SET);
+//		gpio_WritePin(&segmento_G, SET);
+//		break;
+//
+//	case Resolucion_10_Bit:
+//		gpio_WritePin(&puntico, RESET);
+//		gpio_WritePin(&segmento_A, SET);
+//		gpio_WritePin(&segmento_B, SET);
+//		gpio_WritePin(&segmento_C, SET);
+//		gpio_WritePin(&segmento_D, RESET);
+//		gpio_WritePin(&segmento_E, SET);
+//		gpio_WritePin(&segmento_G, RESET);
+//		break;
+//
+//	case Resolucion_12_Bit:
+//		gpio_WritePin(&puntico, RESET);
+//		gpio_WritePin(&segmento_A, RESET);
+//		gpio_WritePin(&segmento_B, SET);
+//		gpio_WritePin(&segmento_C, SET);
+//		gpio_WritePin(&segmento_D, RESET);
+//		gpio_WritePin(&segmento_E, SET);
+//      gpio_WritePin(&segmento_F, SET);
+//		gpio_WritePin(&segmento_G, RESET);
+//		break;
+//
+//	default: {
+//		__NOP();
+//
+//		break;
+//	}
+//	}
+//}
 /*Funcion encargada de prender los segmentos necesarios en el display para mostrar el sensor segun sea el contador*/
 void establecer_sensor_en_pantalla(uint8_t sensor) {
 
 	switch (sensor) {
-
-	case Sensor_1:
+	case 0: {
+		gpio_WritePin(&puntico, RESET);
+		gpio_WritePin(&segmento_A, RESET);
+		gpio_WritePin(&segmento_B, RESET);
+		gpio_WritePin(&segmento_C, RESET);
+		gpio_WritePin(&segmento_D, RESET);
+		gpio_WritePin(&segmento_E, RESET);
+		gpio_WritePin(&segmento_F, RESET);
+		gpio_WritePin(&segmento_G, SET);
+		break;
+	}
+	case 1: {
 		gpio_WritePin(&puntico, RESET);
 		gpio_WritePin(&segmento_A, SET);
 		gpio_WritePin(&segmento_B, RESET);
 		gpio_WritePin(&segmento_C, RESET);
 		gpio_WritePin(&segmento_D, SET);
 		gpio_WritePin(&segmento_E, SET);
+		gpio_WritePin(&segmento_F, SET);
 		gpio_WritePin(&segmento_G, SET);
 		break;
-
-	case Sensor_2:
+	}
+	case 2: {
 		gpio_WritePin(&puntico, RESET);
 		gpio_WritePin(&segmento_A, RESET);
 		gpio_WritePin(&segmento_B, RESET);
 		gpio_WritePin(&segmento_C, SET);
 		gpio_WritePin(&segmento_D, RESET);
 		gpio_WritePin(&segmento_E, RESET);
+		gpio_WritePin(&segmento_F, SET);
 		gpio_WritePin(&segmento_G, RESET);
 		break;
+	}
 
-	case Sensor_3:
+	case 3: {
 		gpio_WritePin(&puntico, RESET);
 		gpio_WritePin(&segmento_A, RESET);
 		gpio_WritePin(&segmento_B, RESET);
 		gpio_WritePin(&segmento_C, RESET);
 		gpio_WritePin(&segmento_D, RESET);
 		gpio_WritePin(&segmento_E, SET);
+		gpio_WritePin(&segmento_F, SET);
 		gpio_WritePin(&segmento_G, RESET);
 		break;
+	}
+	case 4: {
+		gpio_WritePin(&puntico, RESET);
+		gpio_WritePin(&segmento_A, SET);
+		gpio_WritePin(&segmento_B, RESET);
+		gpio_WritePin(&segmento_C, RESET);
+		gpio_WritePin(&segmento_D, SET);
+		gpio_WritePin(&segmento_E, SET);
+		gpio_WritePin(&segmento_F, RESET);
+		gpio_WritePin(&segmento_G, RESET);
 
-	default: {
-		__NOP();
 		break;
 	}
+	case 5: {
+		gpio_WritePin(&puntico, RESET);
+		gpio_WritePin(&puntico, RESET);
+		gpio_WritePin(&segmento_A, RESET);
+		gpio_WritePin(&segmento_B, SET);
+		gpio_WritePin(&segmento_C, RESET);
+		gpio_WritePin(&segmento_D, RESET);
+		gpio_WritePin(&segmento_E, SET);
+		gpio_WritePin(&segmento_F, RESET);
+		gpio_WritePin(&segmento_G, RESET);
+		break;
+	}
+	case 6: {
+		gpio_WritePin(&puntico, RESET);
+		gpio_WritePin(&segmento_A, RESET);
+		gpio_WritePin(&segmento_B, SET);
+		gpio_WritePin(&segmento_C, RESET);
+		gpio_WritePin(&segmento_D, RESET);
+		gpio_WritePin(&segmento_E, RESET);
+		gpio_WritePin(&segmento_F, RESET);
+		gpio_WritePin(&segmento_G, RESET);
+		break;
+	}
+
+	case 7: {
+		gpio_WritePin(&puntico, RESET);
+		gpio_WritePin(&segmento_A, RESET);
+		gpio_WritePin(&segmento_B, RESET);
+		gpio_WritePin(&segmento_C, RESET);
+		gpio_WritePin(&segmento_D, SET);
+		gpio_WritePin(&segmento_E, SET);
+		gpio_WritePin(&segmento_F, SET);
+		gpio_WritePin(&segmento_G, SET);
+		break;
+	}
+
+	case 8: {
+		gpio_WritePin(&puntico, RESET);
+		gpio_WritePin(&segmento_A, RESET);
+		gpio_WritePin(&segmento_B, RESET);
+		gpio_WritePin(&segmento_C, RESET);
+		gpio_WritePin(&segmento_D, RESET);
+		gpio_WritePin(&segmento_E, RESET);
+		gpio_WritePin(&segmento_F, RESET);
+		gpio_WritePin(&segmento_G, RESET);
+		break;
+	}
+	case 9: {
+		gpio_WritePin(&puntico, RESET);
+		gpio_WritePin(&segmento_A, RESET);
+		gpio_WritePin(&segmento_B, RESET);
+		gpio_WritePin(&segmento_C, RESET);
+		gpio_WritePin(&segmento_D, RESET);
+		gpio_WritePin(&segmento_E, SET);
+		gpio_WritePin(&segmento_F, RESET);
+		gpio_WritePin(&segmento_G, RESET);
+		break;
+	}
+	default: {
+		gpio_WritePin(&puntico, RESET);
+		gpio_WritePin(&segmento_A, SET);
+		gpio_WritePin(&segmento_B, SET);
+		gpio_WritePin(&segmento_C, SET);
+		gpio_WritePin(&segmento_D, SET);
+		gpio_WritePin(&segmento_E, SET);
+		gpio_WritePin(&segmento_F, SET);
+		gpio_WritePin(&segmento_G, SET);
+		break;
+
+	}
+
+
 	}
 }
 /*Fuuncion que si se lanza una conversion analogica digital entonces se sube una bandera y se obtiene el valor */
@@ -656,7 +783,7 @@ void adc_CompleteCallback(void) {
 	_Sensor.adcData = adc_GetValue();
 }
 /*Funcion que si se recibe algo por comunicacion serial almacena la informacion en la variable teclado*/
-void usart1_RxCallback(void) {
+void usart2_RxCallback(void) {
 	teclado = usart_getRxData();
 }
 /*Con esta funcion de interrupcion se cambia el estado del led dependiendo del ARR*/
@@ -665,9 +792,10 @@ void Timer3_Callback(void) {
 }
 /*Con esta funcion de interrupcion se cambia el estado de los dos transistores del display y se envia la info al Display*/
 void Timer5_Callback(void) {
+//	banderadisplay ^= 1;
 
 	gpio_TooglePin(&transistor_sensores);
-	gpio_TooglePin(&transistor_resoluciones);
+//	gpio_TooglePin(&transistor_resoluciones);
 	enviarInfo_al_7_segmentos();
 }
 /*Con esta funcion de interrupcion se sube la bandera para la actualizacion de datos del ADC y se hace un test de conversion ADC*/
@@ -677,14 +805,14 @@ void Timer4_Callback(void) {
 }
 /*Funcion de interrupcion provocada por presionar el boton SW del encoder*/
 void callback_extInt5(void) {
-	bandera_modo ^= 1;
+	bandera_modo = 1;
 	/*Dependiendo de la bandera se muestra el mensaje correspondiente en el Cool term*/
 	if (bandera_modo == SET ) {
 		usart_writeMsg(&usart1, "¡Cambiando a elegir Sensores! *****************************\n\r");
 	}
-	if (bandera_modo == RESET ) {
-		usart_writeMsg(&usart1, "¡Cambiando a elegir Resoluciones! *************************\n\r");
-	}
+//	if (bandera_modo == RESET ) {
+//		usart_writeMsg(&usart1, "¡Cambiando a elegir Resoluciones! *************************\n\r");
+//	}
 }
 /*Funcion de interrupcion provocada por el giro del encoder*/
 void callback_extInt3(void) {

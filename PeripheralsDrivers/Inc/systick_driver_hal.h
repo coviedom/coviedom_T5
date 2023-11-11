@@ -15,7 +15,7 @@
 #define SYSTICK_LOAD_VALUE_100MHz_1ms 100000 //numero de ciclos en 1ms
 
 void config_SysTick_ms(uint8_t systemClock);
-void delay_ms(uint32_t wait_time_ms);
-uint64_t getTicks_ms(void);
+void systick_Delay_ms(uint32_t wait_time_ms);
+uint64_t obtener_ticks_ms(void);
 
 #endif /* SYSTICK_DRIVER_HAL_H_ */
