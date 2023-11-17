@@ -18,6 +18,8 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig);
 static void adc_set_one_channel_sequence(ADC_Config_t *adcConfig);
 static void adc_config_interrupt(ADC_Config_t *adcConfig);
 
+void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
+
 /* Variables y elementos que necesita internamente el driver para funcionar adecuadamente */
 GPIO_Handler_t handlerADCPin = { 0 };
 uint16_t adcRawData = 0;
@@ -1239,5 +1241,21 @@ void adc_ConfigAnalogPin(uint8_t adcChannel) {
 		gpio_Config(&handlerADCPin);
 		break;
 	}
+}
+
+/*En esta funcion se configura para hacer conversiones en muchos canales y en un orden*/
+void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t _Channels_Number){
+	/*Se debe activar el RCC para el ADC1 con bus APB2*/
+	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+	/*Luego siempre es necesario limpiar los registros*/
+	ADC1->CR1 = 0;
+	ADC1->CR2 = 0;
+	/*Se debe inactivar la forma de modo continuo*/
+	ADC1->CR2 &= ~ADC_CR2_CONT;
+	/*Hay que activar el Scan*/
+	ADC1->CR1 |= ADC_CR1_SCAN;
+	/*Ahora hay que configurar el número de elementos que hay en las secuencias y configurar dicha secuencia*/
+	ADC1->SQR1 |= (_Channels_Number-1)<<ADC_SQR1_L_Pos;
+
 }
 

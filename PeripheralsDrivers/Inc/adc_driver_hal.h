@@ -122,9 +122,7 @@ void adc_StopContinuousConv(void);
 void adc_peripheralOnOFF(uint8_t state);
 uint16_t adc_GetValue(void);
 
-/*Configuraciones avanzadas del ADC*/
-
-// void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
+void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
 // void adc_ConfigTrigger (uint8_t sourceType, PWM_Handler_t *triggerSignal);
 
 #endif /*ADC_DRIVER_HAL_H_*/

@@ -4,9 +4,8 @@
  *  Created on: Nov 7, 2023
  *      Author: Cristhian Oviedo
  *
- *  Este driver controla el timer por defecto todo procesador ARM Cortex Mx el cual
+ *  Este driver controla el timer por defecto tod procesador ARM Cortex Mx el cual
  *  hace parte del sistema independiente de la empresa fabricaten del MCU.
- *
  *  para encontrar cual  es el registro de configuracion debemos utilizar el manual generico de
  *  prosesador Cortex - M4, ya que es alli donde se encuentra ya que alli donde se encuentra la
  *  dumentacion para este periferico
