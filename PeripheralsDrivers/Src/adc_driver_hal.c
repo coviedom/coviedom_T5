@@ -19,6 +19,7 @@ static void adc_set_one_channel_sequence(ADC_Config_t *adcConfig);
 static void adc_config_interrupt(ADC_Config_t *adcConfig);
 
 void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
+void adc_ConfigTrigger (uint8_t sourceType, PWM_Handler_t *triggerSignal);
 
 /* Variables y elementos que necesita internamente el driver para funcionar adecuadamente */
 GPIO_Handler_t handlerADCPin = { 0 };
@@ -34,7 +35,6 @@ void adc_ConfigSingleChannel(ADC_Config_t *adcConfig) {
 	/*limpiamos los registros antes de comenzar a configurar*/
 	ADC1->CR1 = 0;
 	ADC1->CR2 = 0;
-	ADC1->SQR1 = 0;
 
 	/*Comenzamos la configuracion de ADC1*/
 
@@ -58,6 +58,7 @@ void adc_ConfigSingleChannel(ADC_Config_t *adcConfig) {
 
 	/* 9. Configuramos el prescaler del ADC en 2:1(el más rápido que se puede tener)*/
 	ADC->CCR &= ~ADC_CCR_ADCPRE;
+
 
 	/* 10. Desactivamos las interrupciones globales */
 	__disable_irq();
@@ -134,816 +135,14 @@ static void adc_set_alignment(ADC_Config_t *adcConfig) {
  */
 static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
 	/*Se hace para los 16 canales*/
-	switch (adcConfig->channel) {
-	case CHANNEL_0: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP0;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP0_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*CArgar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP0_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP0_0 | ADC_SMPR2_SMP0_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP0_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP0_2 | ADC_SMPR2_SMP0_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP0_2 | ADC_SMPR2_SMP0_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP0;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-		}
-		break;
+	if (adcConfig->channel<CHANNEL_10){
+		ADC1 -> SMPR2 |= (adcConfig -> samplingPeriod <<(3*(adcConfig->channel)));
 	}
-	case CHANNEL_1: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP1;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP1_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP1_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP1_0 | ADC_SMPR2_SMP1_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP1_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP1_2 | ADC_SMPR2_SMP1_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP1_2 | ADC_SMPR2_SMP1_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP1;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-
-		}
-		break;
-	}
-	case CHANNEL_2: {
-
-		switch (adcConfig->samplingPeriod) {
-
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP2;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP2_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP2_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP2_0 | ADC_SMPR2_SMP2_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP2_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP2_2 | ADC_SMPR2_SMP2_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP2_2 | ADC_SMPR2_SMP2_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP2;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-
-		}
-		break;
-	}
-	case CHANNEL_3: {
-
-		switch (adcConfig->samplingPeriod) {
-
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP3;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP3_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP3_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP3_0 | ADC_SMPR2_SMP3_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP3_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP3_2 | ADC_SMPR2_SMP3_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP3_2 | ADC_SMPR2_SMP3_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP3;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-
-		}
-		break;
-	}
-	case CHANNEL_4: {
-
-		switch (adcConfig->samplingPeriod) {
-
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP4;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP4_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP4_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP4_0 | ADC_SMPR2_SMP4_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP4_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP4_2 | ADC_SMPR2_SMP4_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP4_2 | ADC_SMPR2_SMP4_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP4;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-
-		}
-		break;
-	}
-	case CHANNEL_5: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP5;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP5_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP5_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP5_0 | ADC_SMPR2_SMP5_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP5_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP5_2 | ADC_SMPR2_SMP5_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP5_2 | ADC_SMPR2_SMP5_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP5;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-
-		}
-		break;
-	}
-	case CHANNEL_6: {
-
-		switch (adcConfig->samplingPeriod) {
-
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP6;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP6_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP6_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP6_0 | ADC_SMPR2_SMP6_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP6_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP6_2 | ADC_SMPR2_SMP6_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP6_2 | ADC_SMPR2_SMP6_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP6;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-		}
-		break;
-	}
-	case CHANNEL_7: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP7;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP7_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP7_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP7_0 | ADC_SMPR2_SMP7_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP7_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP7_2 | ADC_SMPR2_SMP7_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP7_2 | ADC_SMPR2_SMP7_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP7;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-		}
-		break;
-	}
-	case CHANNEL_8: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP8;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP8_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP8_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP8_0 | ADC_SMPR2_SMP8_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP8_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP8_2 | ADC_SMPR2_SMP8_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP8_2 | ADC_SMPR2_SMP8_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP8;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-
-		}
-		break;
-	}
-	case CHANNEL_9: {
-		switch (adcConfig->samplingPeriod) {
-
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR2 &= ~ADC_SMPR2_SMP9;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP9_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP9_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP9_0 | ADC_SMPR2_SMP9_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP9_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP9_2 | ADC_SMPR2_SMP9_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR2 |= (ADC_SMPR2_SMP9_2 | ADC_SMPR2_SMP9_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR2 |= ADC_SMPR2_SMP9;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-		}
-		break;
-	}
-	case CHANNEL_10: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR1 &= ~ADC_SMPR1_SMP10;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP10_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP10_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP10_0 | ADC_SMPR1_SMP10_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP10_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP10_2 | ADC_SMPR1_SMP10_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP10_2 | ADC_SMPR1_SMP10_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP10;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-		}
-		break;
-	}
-	case CHANNEL_11: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR1 &= ~ADC_SMPR1_SMP11;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP11_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP11_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP11_0 | ADC_SMPR1_SMP11_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP11_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP11_2 | ADC_SMPR1_SMP11_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP11_2 | ADC_SMPR1_SMP11_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP11;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-		}
-		break;
-	}
-	case CHANNEL_12: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR1 &= ~ADC_SMPR1_SMP12;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP12_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP12_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP12_0 | ADC_SMPR1_SMP12_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP12_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP12_2 | ADC_SMPR1_SMP12_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP12_2 | ADC_SMPR1_SMP12_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP12;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-		}
-		break;
-	}
-	case CHANNEL_13: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR1 &= ~ADC_SMPR1_SMP13;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP13_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP13_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP13_0 | ADC_SMPR1_SMP13_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP13_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP13_2 | ADC_SMPR1_SMP13_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP13_2 | ADC_SMPR1_SMP13_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP13;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-		}
-		break;
-	}
-	case CHANNEL_14: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR1 &= ~ADC_SMPR1_SMP14;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP14_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP14_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP14_0 | ADC_SMPR1_SMP14_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP14_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP14_2 | ADC_SMPR1_SMP14_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP14_2 | ADC_SMPR1_SMP14_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP14;
-			break;
-
-		default: {
-			__NOP();
-			break;
-		}
-		}
-		break;
-	}
-	case CHANNEL_15: {
-		switch (adcConfig->samplingPeriod) {
-		case SAMPLING_PERIOD_3_CYCLES:
-			/*Cargar 0b000*/
-			ADC1->SMPR1 &= ~ADC_SMPR1_SMP15;
-			break;
-
-		case SAMPLING_PERIOD_15_CYCLES:
-			/*Cargar 0b001*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP15_0;
-			break;
-
-		case SAMPLING_PERIOD_28_CYCLES:
-			/*Cargar 0b010*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP15_1;
-			break;
-
-		case SAMPLING_PERIOD_56_CYCLES:
-			/*Cargar 0b011*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP15_0 | ADC_SMPR1_SMP15_1);
-			break;
-
-		case SAMPLING_PERIOD_84_CYCLES:
-			/*Cargar 0b100*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP15_2;
-			break;
-
-		case SAMPLING_PERIOD_112_CYCLES:
-			/*Cargar 0b101*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP15_2 | ADC_SMPR1_SMP15_0);
-			break;
-
-		case SAMPLING_PERIOD_144_CYCLES:
-			/*Cargar 0b110*/
-			ADC1->SMPR1 |= (ADC_SMPR1_SMP15_2 | ADC_SMPR1_SMP15_1);
-			break;
-
-		case SAMPLING_PERIOD_480_CYCLES:
-			/*Cargar 0b111*/
-			ADC1->SMPR1 |= ADC_SMPR1_SMP15;
-			break;
-
-		default: {
-
-			__NOP();
-			break;
-		}
-
-		}
-		break;
-	}
-	default: {
-
-		__NOP();
-
-		break;
-	}
+	else{
+		ADC1 -> SMPR1 |= (adcConfig -> samplingPeriod<<(3*(adcConfig->channel)-10));
 	}
 }
+
 /*
  *  Configuramos el número de elementos en secuencia (solo un elemento)
  */
@@ -1256,6 +455,87 @@ void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t _Channels_Number){
 	ADC1->CR1 |= ADC_CR1_SCAN;
 	/*Ahora hay que configurar el número de elementos que hay en las secuencias y configurar dicha secuencia*/
 	ADC1->SQR1 |= (_Channels_Number-1)<<ADC_SQR1_L_Pos;
+	/*hay que poner el ciclo que va a ir recorriendo el arreglo a la vez que lo vaya configurando*/
+	for (uint8_t i = 0; i <= _Channels_Number;i++){
+		/*Es necesario configurar un pin para que funcione como ADC */
+		adc_ConfigAnalogPin(adcConfig[i].channel);
+		/*Se debe hacer la configuracion para el ADC1*/
+		/*Se va a hacer un switch case para la resolucion para cada elemento en el arreglo adcConfig*/
+		switch (adcConfig[i].resolution){
+
+		}
+	}
+
 
 }
+
+
+
+
+/*Se debe configurar el trigger externo*/
+void adc_ConfigTrigger(uint8_t sourceType, Pwm_Handler_t *triggerSignal) {
+	switch (sourceType) {
+	    /*configuracion del conversor que siempre hace conversiones*/
+	case TRIGGER_AUTO: {
+		break;
+	}
+		/*configuracion que hará las conversiones con el Exti de forma manual*/
+	case TRIGGER_MANUAL:{
+		break;
+	}
+		/*En este caso las conversiones se van a hacer con el PWM*/
+	case TRIGGER_EXT: {
+		ADC1->CR2 |= ADC_CR2_EXTEN_0;
+		if(triggerSignal->ptTIMx == TIM2){
+	        switch(triggerSignal->config.Canal){
+	        case channel_2_Pwm:{
+	        	ADC1->CR2|=(3<<ADC_CR2_EXTSEL_Pos);
+	        	break;
+	        }
+	        case channel_3_Pwm:{
+	        	ADC1->CR2|=(4<<ADC_CR2_EXTSEL_Pos);
+	        	break;
+	        }
+	        case channel_4_Pwm:{
+	        	ADC1->CR2|=(5<<ADC_CR2_EXTSEL_Pos);
+	        	break;
+	        }
+
+	        }
+
+		}
+		else if (triggerSignal->ptTIMx == TIM3){
+
+	        	ADC1->CR2|=(7<<ADC_CR2_EXTSEL_Pos);
+
+	        }
+		else if (triggerSignal->ptTIMx == TIM4){
+
+			ADC1->CR2|=(9<<ADC_CR2_EXTSEL_Pos);
+	        }
+		else if (triggerSignal->ptTIMx == TIM5){
+
+	        switch(triggerSignal->config.Canal){
+
+	        case channel_1_Pwm:{
+	        	ADC1->CR2|=(10<<ADC_CR2_EXTSEL_Pos);
+	        	break;
+	        }
+	        case channel_2_Pwm:{
+	        	ADC1->CR2|=(11<<ADC_CR2_EXTSEL_Pos);
+	        	break;
+	        }
+	        case channel_3_Pwm:{
+	        	ADC1->CR2|=(12<<ADC_CR2_EXTSEL_Pos);
+	        	break;
+	        }
+	        }
+
+	     }
+	   }
+
+
+   }
+}
+
 
