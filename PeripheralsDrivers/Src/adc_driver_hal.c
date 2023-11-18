@@ -524,8 +524,10 @@ void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales){
 		ADC->CCR &= ~ADC_CCR_ADCPRE;
 		/*Se desactivan las interrupciones globales */
 		__disable_irq();
-		/*Activamos la interrupcion debida a una conevrsion*/
+		/*Activamos la interrupcion debida a cuando se acabe una conversion*/
 		ADC1->CR1 |= ADC_CR1_EOCIE;
+		/*Activando lo que es la interrupcion cada que se termine cada conversion de canal*/
+		ADC1->CR2|= ADC_CR2_EOCS;
 		/*Matriculando la interrupción*/
 		__NVIC_EnableIRQ(ADC_IRQn);
 		/*Activacion del modulo ADC*/
