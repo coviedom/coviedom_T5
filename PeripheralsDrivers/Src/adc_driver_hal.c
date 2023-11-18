@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stm32f4xx.h>
 #include <stm32_assert.h>
+#include <pwm_driver_hal.h>
 
 /* === Headers for private funcions === */
 static void adc_enable_clock_peripheral(void);
@@ -19,7 +20,7 @@ static void adc_set_one_channel_sequence(ADC_Config_t *adcConfig);
 static void adc_config_interrupt(ADC_Config_t *adcConfig);
 
 void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
-void adc_ConfigTrigger (uint8_t sourceType, PWM_Handler_t *triggerSignal);
+void adc_ConfigTrigger (uint8_t sourceType, Pwm_Handler_t*triggerSignal);
 
 /* Variables y elementos que necesita internamente el driver para funcionar adecuadamente */
 GPIO_Handler_t handlerADCPin = { 0 };
@@ -35,6 +36,7 @@ void adc_ConfigSingleChannel(ADC_Config_t *adcConfig) {
 	/*limpiamos los registros antes de comenzar a configurar*/
 	ADC1->CR1 = 0;
 	ADC1->CR2 = 0;
+	ADC1->SQR1 = 0;
 
 	/*Comenzamos la configuracion de ADC1*/
 
@@ -139,7 +141,7 @@ static void adc_set_sampling_and_hold(ADC_Config_t *adcConfig) {
 		ADC1 -> SMPR2 |= (adcConfig -> samplingPeriod <<(3*(adcConfig->channel)));
 	}
 	else{
-		ADC1 -> SMPR1 |= (adcConfig -> samplingPeriod<<(3*(adcConfig->channel)-10));
+		ADC1 -> SMPR1 |= (adcConfig -> samplingPeriod<<(3*((adcConfig->channel)-10)));
 	}
 }
 
@@ -443,33 +445,94 @@ void adc_ConfigAnalogPin(uint8_t adcChannel) {
 }
 
 /*En esta funcion se configura para hacer conversiones en muchos canales y en un orden*/
-void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t _Channels_Number){
+void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales){
 	/*Se debe activar el RCC para el ADC1 con bus APB2*/
 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 	/*Luego siempre es necesario limpiar los registros*/
 	ADC1->CR1 = 0;
 	ADC1->CR2 = 0;
-	/*Se debe inactivar la forma de modo continuo*/
+	/*Se debe inactivar la forma de modo continuo por si esta activado*/
 	ADC1->CR2 &= ~ADC_CR2_CONT;
 	/*Hay que activar el Scan*/
 	ADC1->CR1 |= ADC_CR1_SCAN;
 	/*Ahora hay que configurar el número de elementos que hay en las secuencias y configurar dicha secuencia*/
-	ADC1->SQR1 |= (_Channels_Number-1)<<ADC_SQR1_L_Pos;
+	ADC1->SQR1 |= (numeroDeCanales-1)<<ADC_SQR1_L_Pos;
 	/*hay que poner el ciclo que va a ir recorriendo el arreglo a la vez que lo vaya configurando*/
-	for (uint8_t i = 0; i <= _Channels_Number;i++){
+	for (uint8_t i = 0; i <= numeroDeCanales;i++){
 		/*Es necesario configurar un pin para que funcione como ADC */
 		adc_ConfigAnalogPin(adcConfig[i].channel);
-		/*Se debe hacer la configuracion para el ADC1*/
+
 		/*Se va a hacer un switch case para la resolucion para cada elemento en el arreglo adcConfig*/
 		switch (adcConfig[i].resolution){
 
+		case RESOLUTION_12_BIT: {
+			/*Cargar 0b00*/
+			ADC1->CR1 &= ~ADC_CR1_RES;
+			break;
+		}
+		case RESOLUTION_10_BIT: {
+			/*Cargar 0b01*/
+			ADC1->CR1 |= ADC_CR1_RES_0;
+			break;
+		}
+		case RESOLUTION_8_BIT: {
+			/*Cargar 0b10*/
+			ADC1->CR1 |= ADC_CR1_RES_1;
+			break;
+		}
+		case RESOLUTION_6_BIT: {
+			/*Cargar 0b11*/
+			ADC1->CR1 |= ADC_CR1_RES;
+			break;
+		}
+		default: {
+			/*Que sea 12 bit*/
+			ADC1->CR1 &= ~ADC_CR1_RES;
+			break;
+		}
+
+		}
+		/*Ahora es necesario establecer la alineacion*/
+		if (adcConfig[i].dataAlignment== ALIGNMENT_LEFT){
+			/*Que se cargue alineacion a la izquierda*/
+			ADC1->CR2 |= ADC_CR2_ALIGN;
+		} else {
+			/*Sino alineacion a la derecha*/
+			ADC1->CR2 &= ~ADC_CR2_ALIGN;
+		}
+		/*Ahora a configurar el periodo de muestreo para cada elemento del arreglo*/
+		/*Se hace para los 16 canales*/
+		if (adcConfig[i].channel<CHANNEL_10){
+			ADC1 -> SMPR2 |= (adcConfig[i].samplingPeriod <<(3*(adcConfig[i].channel)));
+		}
+		else{
+			ADC1 -> SMPR1 |= (adcConfig[i].samplingPeriod<<(3*((adcConfig[i].channel)-10)));
+		}
+		/*Ahora se tiene que definir la secuencia */
+		if(numeroDeCanales <=6){
+			ADC1->SQR3 |= (adcConfig[i].channel << i*5);
+		}
+		else if((numeroDeCanales > 6) && (numeroDeCanales<=12) ){
+			ADC1->SQR2 |= (adcConfig[i].channel << ((i*5)-30));
+		}
+		else if((numeroDeCanales > 12) && (numeroDeCanales<=16) ){
+			ADC1->SQR2 |= (adcConfig[i].channel << ((i*5)-60));
 		}
 	}
 
-
+		/*Ahora se configura el preescaler de 2:1*/
+		ADC->CCR &= ~ADC_CCR_ADCPRE;
+		/*Se desactivan las interrupciones globales */
+		__disable_irq();
+		/*Activamos la interrupcion debida a una conevrsion*/
+		ADC1->CR1 |= ADC_CR1_EOCIE;
+		/*Matriculando la interrupción*/
+		__NVIC_EnableIRQ(ADC_IRQn);
+		/*Activacion del modulo ADC*/
+		ADC1->CR2 |= ADC_CR2_ADON;
+		/*Por ultimo activamos las interrupciones globales*/
+		__enable_irq();
 }
-
-
 
 
 /*Se debe configurar el trigger externo*/
@@ -479,13 +542,17 @@ void adc_ConfigTrigger(uint8_t sourceType, Pwm_Handler_t *triggerSignal) {
 	case TRIGGER_AUTO: {
 		break;
 	}
-		/*configuracion que hará las conversiones con el Exti de forma manual*/
+		/*configuracion que hará las conversiones de forma manual*/
 	case TRIGGER_MANUAL:{
 		break;
 	}
 		/*En este caso las conversiones se van a hacer con el PWM*/
 	case TRIGGER_EXT: {
+
+		/*Que sea con el flanco de subida*/
 		ADC1->CR2 |= ADC_CR2_EXTEN_0;
+		/*Ahora a configurar con el EXTSEL dependiendo del canal timer y canal PWM a utilizar*/
+		/*Para timer 2*/
 		if(triggerSignal->ptTIMx == TIM2){
 	        switch(triggerSignal->config.Canal){
 	        case channel_2_Pwm:{
@@ -500,19 +567,20 @@ void adc_ConfigTrigger(uint8_t sourceType, Pwm_Handler_t *triggerSignal) {
 	        	ADC1->CR2|=(5<<ADC_CR2_EXTSEL_Pos);
 	        	break;
 	        }
-
 	        }
-
 		}
+		/*Para timer 3*/
 		else if (triggerSignal->ptTIMx == TIM3){
 
 	        	ADC1->CR2|=(7<<ADC_CR2_EXTSEL_Pos);
 
 	        }
+		/*Para el timer 4 solo hay un canal disponible*/
 		else if (triggerSignal->ptTIMx == TIM4){
 
 			ADC1->CR2|=(9<<ADC_CR2_EXTSEL_Pos);
 	        }
+		/*Para el timer 5*/
 		else if (triggerSignal->ptTIMx == TIM5){
 
 	        switch(triggerSignal->config.Canal){

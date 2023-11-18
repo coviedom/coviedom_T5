@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include "stm32f4xx.h"
+#include <pwm_driver_hal.h>
 
 enum{
 
@@ -123,7 +124,7 @@ void adc_peripheralOnOFF(uint8_t state);
 uint16_t adc_GetValue(void);
 
 void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
-void adc_ConfigTrigger (uint8_t sourceType, PWM_Handler_t *triggerSignal);
+void adc_ConfigTrigger (uint8_t sourceType, Pwm_Handler_t *triggerSignal);
 
 #endif /*ADC_DRIVER_HAL_H_*/
 
