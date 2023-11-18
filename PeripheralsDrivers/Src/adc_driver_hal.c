@@ -516,7 +516,7 @@ void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales){
 			ADC1->SQR2 |= (adcConfig[i].channel << ((i*5)-30));
 		}
 		else if((numeroDeCanales > 12) && (numeroDeCanales<=16) ){
-			ADC1->SQR2 |= (adcConfig[i].channel << ((i*5)-60));
+			ADC1->SQR1 |= (adcConfig[i].channel << ((i*5)-60));
 		}
 	}
 
