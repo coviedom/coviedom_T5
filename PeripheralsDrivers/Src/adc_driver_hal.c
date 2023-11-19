@@ -518,6 +518,9 @@ void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales){
 		else if((numeroDeCanales > 12) && (numeroDeCanales<=16) ){
 			ADC1->SQR1 |= (adcConfig[i].channel << ((i*5)-60));
 		}
+		else{
+			__NOP();
+		}
 	}
 
 		/*Ahora se configura el preescaler de 2:1*/
