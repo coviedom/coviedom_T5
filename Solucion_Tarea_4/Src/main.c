@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stm32f4xx.h>
+#include <math.h>
+#include <stdbool.h>
 #include "stm32_assert.h"
 #include "gpio_driver_hal.h"
 #include "usart_driver_hal.h"
@@ -18,6 +20,7 @@
 #include "pwm_driver_hal.h"
 #include "timer_driver_hal.h"
 #include "arm_math.h"
+
 
 #define CANTIDAD_DE_SENSORES 3
 
@@ -49,9 +52,20 @@ Pwm_Handler_t _PWM_Muestreo = {0};
 /*variable que guarda el caracter recibido tras presionar una tecla*/
 uint8_t teclado = 0;
 /*Se crea una variable para guardar las conversiones que se hace en cada canal*/
-uint8_t _Dato_de_Secuencia = 0;
+uint8_t _Contador_Secuencia = 0;
+/**/
+uint16_t contador1 = 0;
+uint16_t contador2 = 0;
+uint16_t contador3 = 0;
 
-uint8_t adcComplete = 0;
+uint8_t recoleccion1 = 0;
+uint8_t recoleccion2 = 0;
+uint8_t recoleccion3 = 0;
+
+uint16_t _Valores_Sensor1[512] = {0};
+uint16_t _Valores_Sensor2[512] = {0};
+uint16_t _Valores_Sensor3[512] = {0};
+
 
 /*Definimos el arreglo en el que se guardará el mensaje para cool Term*/
 char buffer_info[128] = {0};
@@ -68,17 +82,19 @@ int main(void) {
 	/*Lo que realiza el codigo ciclicamente*/
 	while (1) {
 
-		if (adcComplete) {
-			adcComplete = 0;
-	        sprintf(buffer_info, "Sensor 1 = %d  = %.2f[V]\n\rSensor 2 = %d  = %.2f[V]\n\rSensor 3 = %d  = %.2f[V]\n\r", _Sensores[0].adcData, _Sensores[0].adcData * (float)(3.3 / 4095),_Sensores[1].adcData, _Sensores[1].adcData * (float)(3.3 / 4095),_Sensores[2].adcData, _Sensores[2].adcData * (float)(3.3 / 4095));
-			usart_writeMsg(&usart2, buffer_info);
-		}
+//		if (adcComplete) {
+//			adcComplete = 0;
+//	        sprintf(buffer_info, "Sensor 1 = %d  = %.2f[V]\n\rSensor 2 = %d  = %.2f[V]\n\rSensor 3 = %d  = %.2f[V]\n\r", _Sensores[0].adcData, _Sensores[0].adcData * (float)(3.3 / 4095),_Sensores[1].adcData, _Sensores[1].adcData * (float)(3.3 / 4095),_Sensores[2].adcData, _Sensores[2].adcData * (float)(3.3 / 4095));
+//			usart_writeMsg(&usart2, buffer_info);
+//		}
 		/*Si lo que recibe la variable teclado es diferente del caracter nulo entonces ocurrirá lo que sigue*/
 		if (teclado != '\0') {
 			/*Si se presiona la letra "p" entonces se muestra un menu de ayuda para los comandos que se pueden utilizar */
 			if (teclado == 'p') {
-//				adc_StartSingleConv();
-
+				usart_writeMsg(&usart2, "CALCULADOR DE FRECUENCIAS\n\r");
+				recoleccion1 = SET;
+				recoleccion2 = SET;
+				recoleccion3 = SET;
 				teclado = 0;
 			}
 		}
@@ -168,7 +184,6 @@ void start(void) {
 	_PWM_Muestreo.config.periodo = 25;
 	_PWM_Muestreo.config.CicloDuty = 5;
 	configuracion_del_pwm(&_PWM_Muestreo);
-//	activar_salida(&_PWM_Muestreo);
 	inicio_de_señal_pwm(&_PWM_Muestreo);
 
 	/*Se configura el trigger externo*/
@@ -186,13 +201,42 @@ void usart2_RxCallback(void) {
 /* */
 void adc_CompleteCallback(void) {
 	/**/
-	adcComplete = 1;
+//	_Sensores[_Contador_Secuencia].adcData = adc_GetValue();
+//	_Contador_Secuencia++; /**/
+//
+//	if (_Contador_Secuencia >= CANTIDAD_DE_SENSORES){
+//		_Contador_Secuencia = 0; /**/
+//	}
 
-	_Sensores[_Dato_de_Secuencia].adcData = adc_GetValue();
-	_Dato_de_Secuencia++; /**/
+	_Sensores[_Contador_Secuencia].adcData = adc_GetValue();
+	if(_Contador_Secuencia ==0 && recoleccion1 == SET){
+		_Valores_Sensor1[contador1]=_Sensores[_Contador_Secuencia].adcData ;
+		contador1++;
+		if(contador1 >= 512){
+			recoleccion1 = RESET;
+		}
+	}
 
-	if (_Dato_de_Secuencia >= CANTIDAD_DE_SENSORES){
-		_Dato_de_Secuencia = 0; /**/
+	if(_Contador_Secuencia ==1 && recoleccion2 == SET){
+		_Valores_Sensor2[contador2]=_Sensores[_Contador_Secuencia].adcData ;
+		contador2++;
+		if(contador2 >= 512){
+			recoleccion2 = RESET;
+		}
+	}
+
+	if(_Contador_Secuencia ==2 && recoleccion3 == SET){
+		_Valores_Sensor3[contador3]=_Sensores[_Contador_Secuencia].adcData ;
+		contador3++;
+		if(contador3 >= 512){
+			recoleccion3 = RESET;
+		}
+	}
+
+	_Contador_Secuencia++; /**/
+
+	if (_Contador_Secuencia >= CANTIDAD_DE_SENSORES){
+		_Contador_Secuencia = 0; /**/
 	}
 }
 
