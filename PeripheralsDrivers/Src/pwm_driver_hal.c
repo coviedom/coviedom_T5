@@ -48,12 +48,12 @@ static void activar_señal_reloj(Pwm_Handler_t *pt_HandlerPwm){
 		RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 	}
 	else if(pt_HandlerPwm->ptTIMx == TIM4){
-		RCC->APB2ENR &= ~RCC_APB1ENR_TIM4EN;
-		RCC->APB2ENR |= RCC_APB1ENR_TIM4EN;
+		RCC->APB1ENR &= ~RCC_APB1ENR_TIM4EN;
+		RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
 	}
 	else if(pt_HandlerPwm->ptTIMx == TIM5){
-		RCC->APB2ENR &= ~RCC_APB1ENR_TIM5EN;
-		RCC->APB2ENR |= RCC_APB1ENR_TIM5EN;
+		RCC->APB1ENR &= ~RCC_APB1ENR_TIM5EN;
+		RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
 	}
 	else{
 		__NOP();

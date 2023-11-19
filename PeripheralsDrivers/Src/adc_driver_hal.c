@@ -446,22 +446,27 @@ void adc_ConfigAnalogPin(uint8_t adcChannel) {
 
 /*En esta funcion se configura para hacer conversiones en muchos canales y en un orden*/
 void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales){
+
+	for (uint8_t i = 0; i <= numeroDeCanales;i++){
+		/*Es necesario configurar un pin para que funcione como ADC */
+		adc_ConfigAnalogPin(adcConfig[i].channel);
+	}
 	/*Se debe activar el RCC para el ADC1 con bus APB2*/
 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
 	/*Luego siempre es necesario limpiar los registros*/
 	ADC1->CR1 = 0;
 	ADC1->CR2 = 0;
 	/*Se debe inactivar la forma de modo continuo por si esta activado*/
-	ADC1->CR2 &= ~ADC_CR2_CONT;
+	adc_StopContinuousConv();
+//	ADC1->CR2 &= ~ADC_CR2_CONT;
 	/*Hay que activar el Scan*/
-	ADC1->CR1 |= ADC_CR1_SCAN;
+	adc_ScanMode(SCAN_ON);
+//	ADC1->CR1 |= ADC_CR1_SCAN;
 	/*Ahora hay que configurar el número de elementos que hay en las secuencias y configurar dicha secuencia*/
 	ADC1->SQR1 |= (numeroDeCanales-1)<<ADC_SQR1_L_Pos;
 	/*hay que poner el ciclo que va a ir recorriendo el arreglo a la vez que lo vaya configurando*/
-	for (uint8_t i = 0; i <= numeroDeCanales;i++){
-		/*Es necesario configurar un pin para que funcione como ADC */
-		adc_ConfigAnalogPin(adcConfig[i].channel);
 
+	for (uint8_t i = 0; i <= numeroDeCanales;i++){
 		/*Se va a hacer un switch case para la resolucion para cada elemento en el arreglo adcConfig*/
 		switch (adcConfig[i].resolution){
 

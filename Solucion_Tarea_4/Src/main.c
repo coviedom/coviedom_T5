@@ -50,8 +50,9 @@ Pwm_Handler_t _PWM_Muestreo = {0};
 uint8_t teclado = 0;
 /*Se crea una variable para guardar las conversiones que se hace en cada canal*/
 uint8_t _Dato_de_Secuencia = 0;
-/*Se establece el duty del PWM*/
-uint16_t _Duty = 3;
+
+uint8_t adcComplete = 0;
+
 /*Definimos el arreglo en el que se guardará el mensaje para cool Term*/
 char buffer_info[128] = {0};
 
@@ -66,13 +67,18 @@ int main(void) {
 
 	/*Lo que realiza el codigo ciclicamente*/
 	while (1) {
+
+		if (adcComplete) {
+			adcComplete = 0;
+	        sprintf(buffer_info, "Sensor 1 = %d  = %.2f[V]\n\rSensor 2 = %d  = %.2f[V]\n\rSensor 3 = %d  = %.2f[V]\n\r", _Sensores[0].adcData, _Sensores[0].adcData * (float)(3.3 / 4095),_Sensores[1].adcData, _Sensores[1].adcData * (float)(3.3 / 4095),_Sensores[2].adcData, _Sensores[2].adcData * (float)(3.3 / 4095));
+			usart_writeMsg(&usart2, buffer_info);
+		}
 		/*Si lo que recibe la variable teclado es diferente del caracter nulo entonces ocurrirá lo que sigue*/
 		if (teclado != '\0') {
 			/*Si se presiona la letra "p" entonces se muestra un menu de ayuda para los comandos que se pueden utilizar */
 			if (teclado == 'p') {
-		        sprintf(buffer_info, "Sensor 1 = %d  = %.2f[V]\n\rSensor 2 = %d  = %.2f[V]\n\rSensor 3 = %d  = %.2f[V]\n\r", _Sensores[0].adcData, _Sensores[0].adcData * (float)(3.3 / 4095),_Sensores[1].adcData, _Sensores[1].adcData * (float)(3.3 / 4095),_Sensores[2].adcData, _Sensores[2].adcData * (float)(3.3 / 4095));
-		        usart_writeMsg(&usart2, buffer_info);
-				adc_StartSingleConv();
+//				adc_StartSingleConv();
+
 				teclado = 0;
 			}
 		}
@@ -129,21 +135,21 @@ void start(void) {
 	_Sensor1.channel = CHANNEL_5;
 	_Sensor1.resolution = RESOLUTION_12_BIT;
 	_Sensor1.dataAlignment = ALIGNMENT_RIGHT;
-	_Sensor1.samplingPeriod = SAMPLING_PERIOD_144_CYCLES;
+	_Sensor1.samplingPeriod = SAMPLING_PERIOD_480_CYCLES;
 	_Sensor1.interrupState = ADC_INT_ENABLE;
 
 	/*El sensor 2 siendo el segundo de la secuencia*/
 	_Sensor2.channel = CHANNEL_6;
 	_Sensor2.resolution = RESOLUTION_12_BIT;
 	_Sensor2.dataAlignment = ALIGNMENT_RIGHT;
-	_Sensor2.samplingPeriod = SAMPLING_PERIOD_144_CYCLES;
+	_Sensor2.samplingPeriod = SAMPLING_PERIOD_480_CYCLES;
 	_Sensor2.interrupState = ADC_INT_ENABLE;
 
 	/*El sensor 3 siendo el tercero de la secuencia*/
 	_Sensor3.channel = CHANNEL_7;
 	_Sensor3.resolution = RESOLUTION_12_BIT;
 	_Sensor3.dataAlignment = ALIGNMENT_RIGHT;
-	_Sensor3.samplingPeriod = SAMPLING_PERIOD_144_CYCLES;
+	_Sensor3.samplingPeriod = SAMPLING_PERIOD_480_CYCLES;
 	_Sensor3.interrupState = ADC_INT_ENABLE;
 
 
@@ -155,18 +161,18 @@ void start(void) {
 	/*Ahora que se cargue la configuracion de todos los sensores*/
 	adc_ConfigMultichannel (_Sensores,CANTIDAD_DE_SENSORES);
 
-//	/*Se configura el PWM que va a ayudar a muestrear la señal */
-//	_PWM_Muestreo.ptTIMx = TIM4;
-//	_PWM_Muestreo.config.Canal = channel_4_Pwm;
-//	_PWM_Muestreo.config.prescaler = 16;
-//	_PWM_Muestreo.config.periodo = 25;
-//	_PWM_Muestreo.config.CicloDuty = _Duty;
-//	configuracion_del_pwm(&_PWM_Muestreo);
+	/*Se configura el PWM que va a ayudar a muestrear la señal */
+	_PWM_Muestreo.ptTIMx = TIM5;
+	_PWM_Muestreo.config.Canal = channel_2_Pwm;
+	_PWM_Muestreo.config.prescaler = 16;
+	_PWM_Muestreo.config.periodo = 25;
+	_PWM_Muestreo.config.CicloDuty = 5;
+	configuracion_del_pwm(&_PWM_Muestreo);
 //	activar_salida(&_PWM_Muestreo);
-//	inicio_de_señal_pwm(&_PWM_Muestreo);
-//
-//	/*Se configura el trigger externo*/
-//	adc_ConfigTrigger (TRIGGER_EXT, &_PWM_Muestreo);
+	inicio_de_señal_pwm(&_PWM_Muestreo);
+
+	/*Se configura el trigger externo*/
+	adc_ConfigTrigger (TRIGGER_EXT, &_PWM_Muestreo);
 }
 
 /*Con esta funcion de interrupcion se cambia el estado del led dependiendo del ARR*/
@@ -180,6 +186,7 @@ void usart2_RxCallback(void) {
 /* */
 void adc_CompleteCallback(void) {
 	/**/
+	adcComplete = 1;
 
 	_Sensores[_Dato_de_Secuencia].adcData = adc_GetValue();
 	_Dato_de_Secuencia++; /**/
