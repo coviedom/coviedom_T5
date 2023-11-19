@@ -1,27 +1,3 @@
 
-PA9  -> Transmisor U1
-PA10 -> Receptor U1
-
-PA5 -> Sensor 3 ADC Canal 5
-PA6 -> Sensor 2 ADC Canal 6
-PA7 -> Sensor 1 ADC Canal 7
-
-PC6  -> puntico                  
-PC12 -> segmento_A   		      
-PC11 -> segmento_B   		      
-PC5  -> segmento_C   		      
-PC9  -> segmento_D   		      
-PC8  -> segmento_E   		      
-PB9  -> segmento_G   		      
-PB6  -> transistor_sensores      
-PB8  -> transistor_resoluciones  
-
-PB10 -> led_Blinky
-
-PC3 ->  clock_del_encoder	   
-PC1 ->  _Data                    
-PB5 ->  boton_modo 
-
-
 
           
