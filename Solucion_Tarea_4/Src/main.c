@@ -22,6 +22,7 @@
 #include "arm_math.h"
 
 
+
 #define CANTIDAD_DE_SENSORES 3
 
 /*Se encabezan las funciones a utilizar en el programa*/
@@ -62,15 +63,49 @@ uint8_t recoleccion1 = 0;
 uint8_t recoleccion2 = 0;
 uint8_t recoleccion3 = 0;
 
-uint16_t _Valores_Sensor1[512] = {0};
-uint16_t _Valores_Sensor2[512] = {0};
-uint16_t _Valores_Sensor3[512] = {0};
+float32_t _Valores_Sensor1[512] = {0};
+float32_t _Valores_Sensor2[512] = {0};
+float32_t _Valores_Sensor3[512] = {0};
 
+uint8_t bandera_adc = 0;
 
 /*Definimos el arreglo en el que se guardará el mensaje para cool Term*/
 char buffer_info[128] = {0};
 
 
+
+
+
+#include "arm_const_structs.h"
+#if defined(SEMIHOSTING)
+#endif
+#define TEST_LENGTH_SAMPLES 512
+/* -------------------------------------------------------------------
+* External Input and Output buffer Declarations for FFT Bin Example
+* ------------------------------------------------------------------- */
+//extern float32_t _Valores_Sensor2[TEST_LENGTH_SAMPLES];
+//static float32_t testOutput[TEST_LENGTH_SAMPLES/2];
+/* ------------------------------------------------------------------
+* Global variables for FFT Bin Example
+* ------------------------------------------------------------------- */
+uint32_t fftSize = 512;
+uint32_t ifftFlag = 0;
+uint32_t doBitReverse = 1;
+arm_cfft_instance_f32 varInstCfftF32;
+/* Reference index at which max energy of bin ocuurs */
+uint32_t refIndex = 213;
+uint32_t indice = 0;
+
+float32_t maximo = 0;
+uint8_t banderaStop2 = 0;
+
+float32_t maxValue1;
+float32_t maxValue2;
+float32_t maxValue3;
+
+float32_t minValue1;
+float32_t minValue2;
+float32_t minValue3;
 int main(void) {
 
 	/*Se activa el co-procesador FPU*/
@@ -79,28 +114,126 @@ int main(void) {
 	/*funcion que se encarga de configurar las definiciones antes mencionadas*/
 	start();
 
+//	  arm_status status;
+//	  float32_t maxValue;
+//	  status = ARM_MATH_SUCCESS;
+//	  status=arm_cfft_init_f32(&varInstCfftF32,fftSize);
+//	  /* Process the data through the CFFT/CIFFT module */
+//	  arm_cfft_f32(&varInstCfftF32,_Valores_Sensor2, ifftFlag, doBitReverse);
+	  /* Process the data through the Complex Magnitude Module for
+	  calculating the magnitude at each bin */
+//	  arm_cmplx_mag_f32(_Valores_Sensor2, testOutput, fftSize);
+	  /* Calculates maxValue and returns corresponding BIN value */
+//	  arm_max_f32(_Valores_Sensor2, fftSize, &maxValue, &testIndex);
+//	  status = (testIndex != refIndex) ? ARM_MATH_TEST_FAILURE : ARM_MATH_SUCCESS;
+
+
+//	  if (status != ARM_MATH_SUCCESS)
+//	    {
+//	  #if defined (SEMIHOSTING)
+//	      printf("FAILURE\n");
+//	  #else
+//	      while (1);                             /* main function does not return */
+//	  #endif
+//	    }
+//	    else
+//	    {
+//	  #if defined (SEMIHOSTING)
+//	      printf("SUCCESS\n");
+//	  #else
+//	      __NOP();                            /* main function does not return */
+//	  #endif
+//	    }
+
+
 	/*Lo que realiza el codigo ciclicamente*/
 	while (1) {
-
-//		if (adcComplete) {
-//			adcComplete = 0;
-//	        sprintf(buffer_info, "Sensor 1 = %d  = %.2f[V]\n\rSensor 2 = %d  = %.2f[V]\n\rSensor 3 = %d  = %.2f[V]\n\r", _Sensores[0].adcData, _Sensores[0].adcData * (float)(3.3 / 4095),_Sensores[1].adcData, _Sensores[1].adcData * (float)(3.3 / 4095),_Sensores[2].adcData, _Sensores[2].adcData * (float)(3.3 / 4095));
-//			usart_writeMsg(&usart2, buffer_info);
-//		}
 		/*Si lo que recibe la variable teclado es diferente del caracter nulo entonces ocurrirá lo que sigue*/
 		if (teclado != '\0') {
 			/*Si se presiona la letra "p" entonces se muestra un menu de ayuda para los comandos que se pueden utilizar */
-			if (teclado == 'p') {
-				usart_writeMsg(&usart2, "CALCULADOR DE FRECUENCIAS\n\r");
+			if (teclado == 'a') {
+				usart_writeMsg(&usart2, "Sensor 1 _____________\n\r");
 				recoleccion1 = SET;
+				teclado = 0;
+			}
+			if (teclado == 'b') {
+				usart_writeMsg(&usart2, "Sensor 2 _____________\n\r");
 				recoleccion2 = SET;
+				teclado = 0;
+			}
+			if (teclado == 'c') {
+				usart_writeMsg(&usart2, "Sensor 3 _____________\n\r");
 				recoleccion3 = SET;
 				teclado = 0;
 			}
+
+		}
+		if(bandera_adc == SET){
+			bandera_adc = RESET;
+			if(_Contador_Secuencia ==0 && recoleccion1 == SET){
+				_Valores_Sensor1[contador1]=_Sensores[_Contador_Secuencia].adcData ;
+				contador1++;
+				if(contador1 >= 512){
+					contador1 = 0;
+					recoleccion1 = RESET;
+					 arm_max_f32(_Valores_Sensor1, fftSize, &maxValue1, &indice);
+					 arm_min_f32(_Valores_Sensor1, fftSize, &minValue1, &indice);
+						sprintf(buffer_info, "Máximo valor %.0f =  %.2f[V]\n\rMínimo valor %.0f =  %.2f[V]\n\r", maxValue1, maxValue1* (float)(3.3 / 4095), minValue1, minValue1* (float)(3.3 / 4095));
+						usart_writeMsg(&usart2, buffer_info);
+					    for (uint16_t e = 0; e < 512; ++e) {
+					    	_Valores_Sensor1[e] = 0;
+					    	if(e == 511 ){
+					    		break;
+					    	}
+					}
+				}
+			}
+			if(_Contador_Secuencia ==1 && recoleccion2 == SET){
+				_Valores_Sensor2[contador2]=_Sensores[_Contador_Secuencia].adcData ;
+				contador2++;
+				if(contador2 >= 512){
+					contador2 = 0;
+					recoleccion2 = RESET;
+					 arm_max_f32(_Valores_Sensor2, fftSize, &maxValue2, &indice);
+					 arm_min_f32(_Valores_Sensor2, fftSize, &minValue2, &indice);
+						sprintf(buffer_info, "Máximo valor %.0f =  %.2f[V]\n\rMínimo valor %.0f =  %.2f[V]\n\r", maxValue2, maxValue2* (float)(3.3 / 4095), minValue2, minValue2* (float)(3.3 / 4095));
+					    usart_writeMsg(&usart2, buffer_info);
+					    for (uint16_t t = 0; t < 512; ++t) {
+					    	_Valores_Sensor2[t] = 0;
+					    	if(t == 511 ){
+					    		break;
+					    	}
+					}
+					    }
+				}
+			if(_Contador_Secuencia ==2 && recoleccion3 == SET){
+				_Valores_Sensor3[contador3]=_Sensores[_Contador_Secuencia].adcData ;
+				contador3++;;
+				if(contador3 >= 512){
+					contador3 = 0;
+					recoleccion3 = RESET;
+					 arm_max_f32(_Valores_Sensor3, fftSize, &maxValue3, &indice);
+					 arm_min_f32(_Valores_Sensor3, fftSize, &minValue3, &indice);
+						sprintf(buffer_info, "Máximo valor %.0f = %.2f[V]\n\rMínimo valor %.0f =  %.2f[V]\n\r", maxValue3, maxValue3* (float)(3.3 / 4095), minValue3, minValue3* (float)(3.3 / 4095));
+					    usart_writeMsg(&usart2, buffer_info);
+					    for (uint16_t r = 0; r < 512; ++r) {
+					    	_Valores_Sensor3[r] = 0;
+					    	if(r == 511 ){
+					    		break;
+					    	}
+					}
+//					    for (int t = 0; t < 512; ++t) {
+//					    	_Valores_Sensor3[t] = 0;
+//					    }
+				}
+			}
+
+
+
 		}
 	}
-}
 
+}
 void start(void) {
 	/*Se configura el led azul del blinky*/
 	led_Blinky.pGPIOx = GPIOB;
@@ -209,36 +342,16 @@ void adc_CompleteCallback(void) {
 //	}
 
 	_Sensores[_Contador_Secuencia].adcData = adc_GetValue();
-	if(_Contador_Secuencia ==0 && recoleccion1 == SET){
-		_Valores_Sensor1[contador1]=_Sensores[_Contador_Secuencia].adcData ;
-		contador1++;
-		if(contador1 >= 512){
-			recoleccion1 = RESET;
-		}
-	}
-
-	if(_Contador_Secuencia ==1 && recoleccion2 == SET){
-		_Valores_Sensor2[contador2]=_Sensores[_Contador_Secuencia].adcData ;
-		contador2++;
-		if(contador2 >= 512){
-			recoleccion2 = RESET;
-		}
-	}
-
-	if(_Contador_Secuencia ==2 && recoleccion3 == SET){
-		_Valores_Sensor3[contador3]=_Sensores[_Contador_Secuencia].adcData ;
-		contador3++;
-		if(contador3 >= 512){
-			recoleccion3 = RESET;
-		}
-	}
+	bandera_adc = SET;
 
 	_Contador_Secuencia++; /**/
 
 	if (_Contador_Secuencia >= CANTIDAD_DE_SENSORES){
 		_Contador_Secuencia = 0; /**/
 	}
+
 }
+
 
 
 
