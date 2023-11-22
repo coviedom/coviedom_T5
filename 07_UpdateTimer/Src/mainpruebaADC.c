@@ -141,7 +141,7 @@ void initSys(void) {
 
 	gpio_Config(&_Rx);
 
-	osicloscopio.channel = CHANNEL_6;
+	osicloscopio.channel = CHANNEL_8;
 	osicloscopio.resolution = RESOLUTION_12_BIT;
 	osicloscopio.dataAlignment = ALIGNMENT_RIGHT;
 	osicloscopio.samplingPeriod = SAMPLING_PERIOD_112_CYCLES;

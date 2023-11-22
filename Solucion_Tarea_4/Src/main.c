@@ -21,18 +21,17 @@
 #include "timer_driver_hal.h"
 #include "arm_math.h"
 
-
+/*Se hace los #define para calcular la frecuencia*/
 #define TAMAÑO_DE_DATOS 512
 #define CANTIDAD_DE_SENSORES 3
-#define FRECUENCIA_DE_MUESTREO 40
+#define FRECUENCIA_DE_MUESTREO 40000
 
-/*Se encabezan las funciones a utilizar en el programa*/
+/*Se encabeza la funcion a utilizar en el programa*/
 void start(void);
 
-
-/*Se define el Led zul del blinky*/
-GPIO_Handler_t led_Blinky = {0};           //PB10
-/*Se definen los timer a utilizar*/
+/*Se define el Led rojo del blinky*/
+GPIO_Handler_t led_Blinky = {0};         //PB10
+/*Se define el timer a utilizar*/
 Timer_Handler_t timer_del_Blinky = {0};
 /*Se define el Usart y sus respectivos pines*/
 GPIO_Handler_t Transmisor = {0};   //PA2
@@ -42,28 +41,60 @@ USART_Handler_t usart2 = {0};
 char buffer_info[128] = {0};
 /*Se define los tres sensores tipo ADC_Config_t*/
 ADC_Config_t _Sensor1 = {0};  //PB1
-ADC_Config_t _Sensor2 = {0};  //PC5
+ADC_Config_t _Sensor2 = {0};  //PB0
 ADC_Config_t _Sensor3 = {0};  //PA6
 /*Se crea un arreglo que va a contener los sensores*/
 ADC_Config_t _Sensores[CANTIDAD_DE_SENSORES]= {0};
 /*Se crea el PWM que va ayudar a muestrear las señales*/
 PWM_Handler_t _PWM_Muestreo = {0};
 
-float32_t frequency = 0;
+/*Se definen los elementos necesarios para encontrar el valor maximo y minimo de la señal del sensor "A" y su frecuencia*/
+float32_t frecuencia_A = 0;  /*Frecuencia de la señal*/
+uint32_t indice_A = 0; /*Indice de la posicion de mayor valor en el arreglo de la señal original*/
+uint32_t indice_max_A =0; /*Indice de la posicion de mayor valor */
+float32_t maxValue_A;
+float32_t minValue_A;
+float32_t maxValue_Afft;
+float32_t señal_A[TAMAÑO_DE_DATOS];
+float32_t transformedSignal_A[TAMAÑO_DE_DATOS]={0};
+float32_t señal_mejorada_A[TAMAÑO_DE_DATOS]={0};
+float32_t señal_final_A[TAMAÑO_DE_DATOS] = {0};
+
+float32_t frecuencia_B = 0;
+uint32_t indice_B = 0;
+uint32_t indice_max_B =0;
+float32_t maxValue_B;
+float32_t minValue_B;
+float32_t maxValue_Bfft;
+float32_t señal_B[TAMAÑO_DE_DATOS];
+float32_t transformedSignal_B[TAMAÑO_DE_DATOS]={0};
+float32_t señal_mejorada_B[TAMAÑO_DE_DATOS]={0};
+float32_t señal_final_B[TAMAÑO_DE_DATOS] = {0};
+
+float32_t frecuencia_C = 0;
 uint32_t indice_C = 0;
 uint32_t indice_max_C =0;
 uint32_t ifftFlag = 0;
 float32_t maxValue_C;
 float32_t minValue_C;
 float32_t maxValue_Cfft;
-float32_t señal_C[512];
-float32_t transformedSignal_C[512];
-float32_t señal_mejorada_C[512];
-float32_t señal_final_C[512] = {0};
+float32_t señal_C[TAMAÑO_DE_DATOS];
+float32_t transformedSignal_C[TAMAÑO_DE_DATOS] = {0};
+float32_t señal_mejorada_C[TAMAÑO_DE_DATOS] = {0};
+float32_t señal_final_C[TAMAÑO_DE_DATOS] = {0};
+
+uint16_t tecla_A = 0;
+uint16_t bandera_final_A = 0;
+uint16_t contad_A = 0;
+
+uint16_t tecla_B = 0;
+uint16_t bandera_final_B = 0;
+uint16_t contad_B = 0;
 
 uint16_t tecla_C = 0;
 uint16_t bandera_final_C = 0;
 uint16_t contad_C = 0;
+
 
 arm_rfft_fast_instance_f32 config_Rfft_fast_f32;
 arm_status status =ARM_MATH_ARGUMENT_ERROR;
@@ -83,37 +114,76 @@ int main(void) {
 	/*Lo que realiza el codigo ciclicamente*/
 	while (1) {
 
+		if (bandera_final_A) {
+			bandera_final_A = RESET;
+			frenar_señal_pwm (&_PWM_Muestreo);
+			arm_absmax_f32 (señal_A, TAMAÑO_DE_DATOS, &maxValue_A, &indice_A);
+			arm_min_f32(señal_A, TAMAÑO_DE_DATOS, &minValue_A, &indice_A);
+			statusInitFFT=arm_rfft_fast_init_f32(&config_Rfft_fast_f32,TAMAÑO_DE_DATOS);
+			if(statusInitFFT == ARM_MATH_SUCCESS){
+			arm_rfft_fast_f32(&config_Rfft_fast_f32, señal_A,transformedSignal_A, ifftFlag);
+			arm_cmplx_mag_f32(transformedSignal_A,señal_mejorada_A,TAMAÑO_DE_DATOS/2);
+			arm_abs_f32(señal_mejorada_A,señal_final_A,TAMAÑO_DE_DATOS/2);
+			señal_final_A[0] = 0;
+			arm_max_f32(señal_final_A, TAMAÑO_DE_DATOS/2, &maxValue_Afft, &indice_max_A);
+			frecuencia_A = ((indice_max_A*FRECUENCIA_DE_MUESTREO)/TAMAÑO_DE_DATOS)/2;
+			usart_writeMsg(&usart2, "Sensor 1 __________________________\n\r");
+			sprintf(buffer_info, "Frecuencia = %.f [Hz]\n\rMáximo de la señal = %.f = %.1f [V]\n\rMínimo de la señal = %.f = %.1f [V] \n\r", frecuencia_A,maxValue_A,maxValue_A*(float)(3.3 / 4095),minValue_A,minValue_A*(float)(3.3 / 4095));
+			usart_writeMsg(&usart2, buffer_info);
+			}
+		}
+
+		if (bandera_final_B) {
+			bandera_final_B = RESET;
+			frenar_señal_pwm (&_PWM_Muestreo);
+			arm_absmax_f32 (señal_B, TAMAÑO_DE_DATOS, &maxValue_B, &indice_B);
+			arm_min_f32(señal_B, TAMAÑO_DE_DATOS, &minValue_B, &indice_B);
+			statusInitFFT=arm_rfft_fast_init_f32(&config_Rfft_fast_f32,TAMAÑO_DE_DATOS);
+			if(statusInitFFT == ARM_MATH_SUCCESS){
+			arm_rfft_fast_f32(&config_Rfft_fast_f32, señal_B,transformedSignal_B, ifftFlag);
+			arm_cmplx_mag_f32(transformedSignal_B,señal_mejorada_B,TAMAÑO_DE_DATOS/2);
+			arm_abs_f32(señal_mejorada_B,señal_final_B,TAMAÑO_DE_DATOS/2);
+			señal_final_B[0] = 0;
+			arm_max_f32(señal_final_B, TAMAÑO_DE_DATOS/2, &maxValue_Bfft, &indice_max_B);
+			frecuencia_B = ((indice_max_B*FRECUENCIA_DE_MUESTREO)/TAMAÑO_DE_DATOS)/2;
+			usart_writeMsg(&usart2, "Sensor 2 __________________________\n\r");
+			sprintf(buffer_info, "Frecuencia = %.f [Hz]\n\rMáximo de la señal = %.f = %.1f [V]\n\rMínimo de la señal = %.f = %.1f [V] \n\r", frecuencia_B,maxValue_B,maxValue_B*(float)(3.3 / 4095),minValue_B,minValue_B*(float)(3.3 / 4095));
+			usart_writeMsg(&usart2, buffer_info);
+			}
+		}
 		if (bandera_final_C) {
-			bandera_final_C = 0;
-			frenar_señal_pwm (&_PWM_Muestreo);;
-			arm_absmax_f32 (señal_C, 512, &maxValue_C, &indice_C);
-			arm_min_f32(señal_C, 512, &minValue_C, &indice_C);
-			statusInitFFT=arm_rfft_fast_init_f32(&config_Rfft_fast_f32,512);
+			bandera_final_C = RESET;
+			frenar_señal_pwm (&_PWM_Muestreo);
+			arm_absmax_f32 (señal_C, TAMAÑO_DE_DATOS, &maxValue_C, &indice_C);
+			arm_min_f32(señal_C, TAMAÑO_DE_DATOS, &minValue_C, &indice_C);
+			statusInitFFT=arm_rfft_fast_init_f32(&config_Rfft_fast_f32,TAMAÑO_DE_DATOS);
 			if(statusInitFFT == ARM_MATH_SUCCESS){
 			arm_rfft_fast_f32(&config_Rfft_fast_f32, señal_C,transformedSignal_C, ifftFlag);
-			arm_cmplx_mag_f32(transformedSignal_C,señal_mejorada_C,128);
-			arm_abs_f32(señal_mejorada_C,señal_final_C,128);
-			señal_final_C[0]=0;
-			arm_max_f32(señal_final_C, 128, &maxValue_Cfft, &indice_max_C);
-
-			usart_writeMsg(&usart2, "Sensor 3 ________________\n\r");
-			sprintf(buffer_info, "frecuencia = %d\n\rMáximo de la señal = %.f \n\rMínimo de la señal = %.f \n\r", 22,maxValue_C,minValue_C);
+			arm_cmplx_mag_f32(transformedSignal_C,señal_mejorada_C,TAMAÑO_DE_DATOS/2);
+			arm_abs_f32(señal_mejorada_C,señal_final_C,TAMAÑO_DE_DATOS/2);
+			señal_final_C[0] = 0;
+			arm_max_f32(señal_final_C, TAMAÑO_DE_DATOS/2, &maxValue_Cfft, &indice_max_C);
+			frecuencia_C = ((indice_max_C*FRECUENCIA_DE_MUESTREO)/TAMAÑO_DE_DATOS)/2;
+			usart_writeMsg(&usart2, "Sensor 3 __________________________\n\r");
+			sprintf(buffer_info, "Frecuencia = %.f [Hz]\n\rMáximo de la señal = %.f = %.1f [V]\n\rMínimo de la señal = %.f = %.1f [V] \n\r", frecuencia_C,maxValue_C,maxValue_C*(float)(3.3 / 4095),minValue_C,minValue_C*(float)(3.3 / 4095));
 			usart_writeMsg(&usart2, buffer_info);
 			}
 		}
 		if (teclado != '\0') {
 
 			if (teclado == 'a') {
-
+				inicio_de_señal_pwm(&_PWM_Muestreo);
+				tecla_A = SET;
 				teclado = 0;
 			}
 			if (teclado == 'b') {
-
+				inicio_de_señal_pwm(&_PWM_Muestreo);
+				tecla_B = SET;
 				teclado = 0;
 			}
 			if (teclado == 'c') {
 				inicio_de_señal_pwm(&_PWM_Muestreo);
-				tecla_C = 1;
+				tecla_C = SET;
 				teclado = 0;
 			}
 		}
@@ -130,7 +200,7 @@ void start(void) {
 	gpio_Config(&led_Blinky);
 	/*Se configura el timer para el blinky*/
 	timer_del_Blinky.pTIMx = TIM9;
-	timer_del_Blinky.TIMx_Config.TIMx_Prescaler = 16;
+	timer_del_Blinky.TIMx_Config.TIMx_Prescaler = 16000;
 	timer_del_Blinky.TIMx_Config.TIMx_Period = 250;
 	timer_del_Blinky.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
 	timer_del_Blinky.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
@@ -172,7 +242,7 @@ void start(void) {
 	_Sensor1.samplingPeriod = SAMPLING_PERIOD_112_CYCLES;
 	_Sensor1.interrupState = ADC_INT_ENABLE;
 	/*El sensor 2 siendo el segundo de la secuencia*/
-	_Sensor2.channel = CHANNEL_15;
+	_Sensor2.channel = CHANNEL_8;
 	_Sensor2.resolution = RESOLUTION_12_BIT;
 	_Sensor2.dataAlignment = ALIGNMENT_RIGHT;
 	_Sensor2.samplingPeriod = SAMPLING_PERIOD_112_CYCLES;
@@ -196,6 +266,7 @@ void start(void) {
 	_PWM_Muestreo.config.periodo = 25;
 	_PWM_Muestreo.config.CicloDuty = 2;
 	configuracion_del_pwm(&_PWM_Muestreo);
+	inicio_de_señal_pwm(&_PWM_Muestreo);
 
 	/*Se configura el trigger externo*/
 	adc_ConfigTrigger (TRIGGER_EXT, &_PWM_Muestreo);
@@ -213,14 +284,38 @@ void adc_CompleteCallback(void) {
 
 	_Sensores[_Contador_Secuencia].adcData = adc_GetValue();
 
+	if (tecla_A) {
+		if (_Contador_Secuencia == 0) {
+			señal_A[contad_A] = _Sensores[0].adcData;
+			contad_A++;
+			if (contad_A == TAMAÑO_DE_DATOS) {
+				contad_A = 0;
+				tecla_A = RESET;
+				bandera_final_A = SET;
+			}
+		}
+	}
+
+	if (tecla_B) {
+		if (_Contador_Secuencia == 1) {
+			señal_B[contad_B] = _Sensores[1].adcData;
+			contad_B++;
+			if (contad_B == TAMAÑO_DE_DATOS) {
+				contad_B = 0;
+				tecla_B = RESET;
+				bandera_final_B = SET;
+			}
+		}
+	}
+
 	if (tecla_C) {
 		if (_Contador_Secuencia == 2) {
 			señal_C[contad_C] = _Sensores[2].adcData;
 			contad_C++;
-			if (contad_C == 512) {
+			if (contad_C == TAMAÑO_DE_DATOS) {
 				contad_C = 0;
-				tecla_C = 0;
-				bandera_final_C = 1;
+				tecla_C = RESET;
+				bandera_final_C = SET;
 			}
 		}
 	}
