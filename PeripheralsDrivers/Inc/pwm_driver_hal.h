@@ -14,10 +14,10 @@
 /*definimos los canales*/
 enum
 {
-	channel_1_Pwm = 0,
-	channel_2_Pwm,
-	channel_3_Pwm,
-	channel_4_Pwm
+	PWM_CHANNEL_1 = 0,
+	PWM_CHANNEL_2,
+	PWM_CHANNEL_3,
+	PWM_CHANNEL_4
 };
 
 /*Estructura de configuracion*/
@@ -32,17 +32,17 @@ typedef struct
 /* Handler para el PWM*/
 typedef struct
 {
-	TIM_TypeDef		*ptTIMx;
+	TIM_TypeDef		*pTIMx;
 	Pwm_Configura_t	config;	/*Configuración inicial*/
-}Pwm_Handler_t;
+}PWM_Handler_t;
 
 /*Header definiciones para las funciones publicas del pwm_driver_hal.h*/
-void configuracion_del_pwm(Pwm_Handler_t *pt_HandlerPwm);
-void actualiza_frecuencia(Pwm_Handler_t *pt_HandlerPwm, uint16_t frecuencia_nueva);
-void actualiza_Ciclo_Duty(Pwm_Handler_t *pt_HandlerPwm, uint16_t Duty_nuevo);
-void inicio_de_señal_pwm(Pwm_Handler_t *pt_HandlerPwm);
-void frenar_señal_pwm(Pwm_Handler_t *pt_HandlerPwm);
-void activar_salida(Pwm_Handler_t *pt_HandlerPwm);
+void configuracion_del_pwm(PWM_Handler_t *pt_HandlerPwm);
+void actualiza_frecuencia(PWM_Handler_t *pt_HandlerPwm, uint16_t frecuencia_nueva);
+void actualiza_Ciclo_Duty(PWM_Handler_t *pt_HandlerPwm, uint16_t Duty_nuevo);
+void inicio_de_señal_pwm(PWM_Handler_t *pt_HandlerPwm);
+void frenar_señal_pwm(PWM_Handler_t *pt_HandlerPwm);
+void activar_salida(PWM_Handler_t *pt_HandlerPwm);
 
 
 #endif /* PWM_DRIVER_HAL_H_ */

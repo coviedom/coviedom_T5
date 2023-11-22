@@ -20,7 +20,7 @@ static void adc_set_one_channel_sequence(ADC_Config_t *adcConfig);
 static void adc_config_interrupt(ADC_Config_t *adcConfig);
 
 void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales);
-void adc_ConfigTrigger (uint8_t sourceType, Pwm_Handler_t*triggerSignal);
+void adc_ConfigTrigger (uint8_t sourceType, PWM_Handler_t*triggerSignal);
 
 /* Variables y elementos que necesita internamente el driver para funcionar adecuadamente */
 GPIO_Handler_t handlerADCPin = { 0 };
@@ -298,12 +298,13 @@ uint16_t adc_GetValue(void) {
 /*esta es la ISR de la interacion por conversion ADC*/
 
 void ADC_IRQHandler(void) {
-	if (ADC1->SR & ADC_SR_EOC) {
-		adcRawData = ADC1->DR;
-		ADC1->SR &= ~ADC_SR_EOC;
+//	while (!(ADC1->CR2 & ADC_CR2_EOCS)){
+//		__NOP();
+//	}
+	if(ADC1->SR & ADC_SR_EOC){
+		adcRawData=ADC1->DR;
+		adc_CompleteCallback();
 	}
-	adc_CompleteCallback();
-
 }
 
 __attribute__((weak)) void adc_CompleteCallback(void) {
@@ -546,7 +547,7 @@ void adc_ConfigMultichannel (ADC_Config_t *adcConfig, uint8_t numeroDeCanales){
 
 
 /*Se debe configurar el trigger externo*/
-void adc_ConfigTrigger(uint8_t sourceType, Pwm_Handler_t *triggerSignal) {
+void adc_ConfigTrigger(uint8_t sourceType, PWM_Handler_t*triggerSignal) {
 	switch (sourceType) {
 	    /*configuracion del conversor que siempre hace conversiones*/
 	case TRIGGER_AUTO: {
@@ -563,47 +564,47 @@ void adc_ConfigTrigger(uint8_t sourceType, Pwm_Handler_t *triggerSignal) {
 		ADC1->CR2 |= ADC_CR2_EXTEN_0;
 		/*Ahora a configurar con el EXTSEL dependiendo del canal timer y canal PWM a utilizar*/
 		/*Para timer 2*/
-		if(triggerSignal->ptTIMx == TIM2){
+		if(triggerSignal->pTIMx == TIM2){
 	        switch(triggerSignal->config.Canal){
-	        case channel_2_Pwm:{
+	        case PWM_CHANNEL_2:{
 	        	ADC1->CR2|=(3<<ADC_CR2_EXTSEL_Pos);
 	        	break;
 	        }
-	        case channel_3_Pwm:{
+	        case PWM_CHANNEL_3:{
 	        	ADC1->CR2|=(4<<ADC_CR2_EXTSEL_Pos);
 	        	break;
 	        }
-	        case channel_4_Pwm:{
+	        case PWM_CHANNEL_4:{
 	        	ADC1->CR2|=(5<<ADC_CR2_EXTSEL_Pos);
 	        	break;
 	        }
 	        }
 		}
 		/*Para timer 3*/
-		else if (triggerSignal->ptTIMx == TIM3){
+		else if (triggerSignal->pTIMx == TIM3){
 
 	        	ADC1->CR2|=(7<<ADC_CR2_EXTSEL_Pos);
 
 	        }
 		/*Para el timer 4 solo hay un canal disponible*/
-		else if (triggerSignal->ptTIMx == TIM4){
+		else if (triggerSignal->pTIMx == TIM4){
 
 			ADC1->CR2|=(9<<ADC_CR2_EXTSEL_Pos);
 	        }
 		/*Para el timer 5*/
-		else if (triggerSignal->ptTIMx == TIM5){
+		else if (triggerSignal->pTIMx == TIM5){
 
 	        switch(triggerSignal->config.Canal){
 
-	        case channel_1_Pwm:{
+	        case PWM_CHANNEL_1:{
 	        	ADC1->CR2|=(10<<ADC_CR2_EXTSEL_Pos);
 	        	break;
 	        }
-	        case channel_2_Pwm:{
+	        case PWM_CHANNEL_2:{
 	        	ADC1->CR2|=(11<<ADC_CR2_EXTSEL_Pos);
 	        	break;
 	        }
-	        case channel_3_Pwm:{
+	        case PWM_CHANNEL_3:{
 	        	ADC1->CR2|=(12<<ADC_CR2_EXTSEL_Pos);
 	        	break;
 	        }

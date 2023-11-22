@@ -375,7 +375,7 @@ void USART2_IRQHandler(void){
     	USART2 -> SR &=~USART_SR_RXNE;
     	usart2_RxCallback();
     	}
-    if (USART2->SR & USART_SR_TXE){
+    else if (USART2->SR & USART_SR_TXE){
     	__NOP();
     	}
     }
@@ -392,7 +392,7 @@ void USART6_IRQHandler(void){
 	   USART6->SR &=~USART_SR_RXNE;
 	   usart6_RxCallback();
 	   }
-	if (USART6->SR & USART_SR_TXE){
+	else if (USART6->SR & USART_SR_TXE){
 		__NOP();
 		}
 }
@@ -407,7 +407,7 @@ void USART1_IRQHandler(void){
 	   USART1->SR &=~USART_SR_RXNE;
 	   usart1_RxCallback();
 		}
-	if (USART1->SR & USART_SR_TXE){
+	else if (USART1->SR & USART_SR_TXE){
 		__NOP();
 		}
 }

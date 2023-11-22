@@ -12,12 +12,12 @@
 #include <stm32_assert.h>
 
 /* === Headers de las funciones privadas === */
-static void activar_señal_reloj(Pwm_Handler_t *pt_HandlerPwm);
-static void establecer_la_frecuencia(Pwm_Handler_t *pt_HandlerPwm);
-static void establecer_ciclo_duty(Pwm_Handler_t *pt_HandlerPwm);
-static void preload_y_pwm(Pwm_Handler_t *pt_HandlerPwm);
+static void activar_señal_reloj(PWM_Handler_t *pt_HandlerPwm);
+static void establecer_la_frecuencia(PWM_Handler_t *pt_HandlerPwm);
+static void establecer_ciclo_duty(PWM_Handler_t *pt_HandlerPwm);
+static void preload_y_pwm(PWM_Handler_t *pt_HandlerPwm);
 
-void configuracion_del_pwm(Pwm_Handler_t *pt_HandlerPwm){
+void configuracion_del_pwm(PWM_Handler_t *pt_HandlerPwm){
 /*Funcion para activar la señal de reloj*/
 	activar_señal_reloj(pt_HandlerPwm);
 /*funcion que sirve para definir la frecuencia*/
@@ -25,9 +25,9 @@ void configuracion_del_pwm(Pwm_Handler_t *pt_HandlerPwm){
 /*funcion para establecer el ciclo del duty*/
 	establecer_ciclo_duty(pt_HandlerPwm);
 
-	pt_HandlerPwm->ptTIMx->CR1  &= ~TIM_CR1_DIR;
+	pt_HandlerPwm->pTIMx->CR1  &= ~TIM_CR1_DIR;
 
-	pt_HandlerPwm->ptTIMx->CNT = 0;
+	pt_HandlerPwm->pTIMx->CNT = 0;
 /*cargamos el preload y tambien configuracion del pwm*/
 	preload_y_pwm(pt_HandlerPwm);
 /*se activa la salida*/
@@ -35,23 +35,23 @@ void configuracion_del_pwm(Pwm_Handler_t *pt_HandlerPwm){
 
 	}
 
-static void activar_señal_reloj(Pwm_Handler_t *pt_HandlerPwm){
+static void activar_señal_reloj(PWM_Handler_t *pt_HandlerPwm){
 
-	if(pt_HandlerPwm->ptTIMx == TIM2){
+	if(pt_HandlerPwm->pTIMx == TIM2){
 
 		RCC->APB1ENR &= ~RCC_APB1ENR_TIM2EN;
 		RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 	}
-	else if(pt_HandlerPwm->ptTIMx == TIM3){
+	else if(pt_HandlerPwm->pTIMx == TIM3){
 
 		RCC->APB1ENR &= ~RCC_APB1ENR_TIM3EN;
 		RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 	}
-	else if(pt_HandlerPwm->ptTIMx == TIM4){
+	else if(pt_HandlerPwm->pTIMx == TIM4){
 		RCC->APB1ENR &= ~RCC_APB1ENR_TIM4EN;
 		RCC->APB1ENR |= RCC_APB1ENR_TIM4EN;
 	}
-	else if(pt_HandlerPwm->ptTIMx == TIM5){
+	else if(pt_HandlerPwm->pTIMx == TIM5){
 		RCC->APB1ENR &= ~RCC_APB1ENR_TIM5EN;
 		RCC->APB1ENR |= RCC_APB1ENR_TIM5EN;
 	}
@@ -60,29 +60,29 @@ static void activar_señal_reloj(Pwm_Handler_t *pt_HandlerPwm){
 	}
 }
 
-static void establecer_la_frecuencia(Pwm_Handler_t *pt_HandlerPwm){
+static void establecer_la_frecuencia(PWM_Handler_t *pt_HandlerPwm){
 
-    pt_HandlerPwm->ptTIMx->PSC = pt_HandlerPwm->config.prescaler;
+    pt_HandlerPwm->pTIMx->PSC = pt_HandlerPwm->config.prescaler-1;
 
-	pt_HandlerPwm->ptTIMx->ARR = pt_HandlerPwm->config.periodo;
+	pt_HandlerPwm->pTIMx->ARR = pt_HandlerPwm->config.periodo-1;
 
 }
-static void establecer_ciclo_duty(Pwm_Handler_t *pt_HandlerPwm){
+static void establecer_ciclo_duty(PWM_Handler_t *pt_HandlerPwm){
 	switch(pt_HandlerPwm->config.Canal){
-	case channel_1_Pwm:{
-		pt_HandlerPwm->ptTIMx->CCR1 = (pt_HandlerPwm->config.CicloDuty);
+	case PWM_CHANNEL_1:{
+		pt_HandlerPwm->pTIMx->CCR1 = (pt_HandlerPwm->config.CicloDuty);
 		break;
 	}
-	case channel_2_Pwm: {
-		pt_HandlerPwm->ptTIMx->CCR2 = (pt_HandlerPwm->config.CicloDuty);
+	case PWM_CHANNEL_2: {
+		pt_HandlerPwm->pTIMx->CCR2 = (pt_HandlerPwm->config.CicloDuty);
 		break;
 	}
-	case channel_3_Pwm: {
-		pt_HandlerPwm->ptTIMx->CCR3 = (pt_HandlerPwm->config.CicloDuty);
+	case PWM_CHANNEL_3: {
+		pt_HandlerPwm->pTIMx->CCR3 = (pt_HandlerPwm->config.CicloDuty);
 		break;
 	}
-	case channel_4_Pwm: {
-		pt_HandlerPwm->ptTIMx->CCR4 = (pt_HandlerPwm->config.CicloDuty);
+	case PWM_CHANNEL_4: {
+		pt_HandlerPwm->pTIMx->CCR4 = (pt_HandlerPwm->config.CicloDuty);
 		break;
 	}
 	default:{
@@ -92,52 +92,52 @@ static void establecer_ciclo_duty(Pwm_Handler_t *pt_HandlerPwm){
 }
 }
 
-static void preload_y_pwm(Pwm_Handler_t *pt_HandlerPwm){
+static void preload_y_pwm(PWM_Handler_t *pt_HandlerPwm){
 	switch(pt_HandlerPwm->config.Canal){
-	case channel_1_Pwm:{
-		pt_HandlerPwm->ptTIMx->CCMR1 &= ~TIM_CCMR1_CC1S;
+	case PWM_CHANNEL_1:{
+		pt_HandlerPwm->pTIMx->CCMR1 &= ~TIM_CCMR1_CC1S;
 
-		pt_HandlerPwm->ptTIMx->CCMR1 |= TIM_CCMR1_OC1FE;
+		pt_HandlerPwm->pTIMx->CCMR1 |= TIM_CCMR1_OC1FE;
 
-		pt_HandlerPwm->ptTIMx->CCMR1 |= TIM_CCMR1_OC1M_1;
+		pt_HandlerPwm->pTIMx->CCMR1 |= TIM_CCMR1_OC1M_1;
 
-		pt_HandlerPwm->ptTIMx->CCMR1 |= TIM_CCMR1_OC1M_2;
+		pt_HandlerPwm->pTIMx->CCMR1 |= TIM_CCMR1_OC1M_2;
 
-		pt_HandlerPwm->ptTIMx->CCMR1 |= TIM_CCMR1_OC1PE;
+		pt_HandlerPwm->pTIMx->CCMR1 |= TIM_CCMR1_OC1PE;
 		break;
 	}
-	case channel_2_Pwm:{
-		pt_HandlerPwm->ptTIMx->CCMR1 &= ~TIM_CCMR1_CC2S;
-		pt_HandlerPwm->ptTIMx->CCMR1 |= TIM_CCMR1_OC2FE;
-		pt_HandlerPwm->ptTIMx->CCMR1 |= TIM_CCMR1_OC2M_1;
-		pt_HandlerPwm->ptTIMx->CCMR1 |= TIM_CCMR1_OC2M_2;
-		pt_HandlerPwm->ptTIMx->CCMR1 |= TIM_CCMR1_OC2PE;
+	case PWM_CHANNEL_2:{
+		pt_HandlerPwm->pTIMx->CCMR1 &= ~TIM_CCMR1_CC2S;
+		pt_HandlerPwm->pTIMx->CCMR1 |= TIM_CCMR1_OC2FE;
+		pt_HandlerPwm->pTIMx->CCMR1 |= TIM_CCMR1_OC2M_1;
+		pt_HandlerPwm->pTIMx->CCMR1 |= TIM_CCMR1_OC2M_2;
+		pt_HandlerPwm->pTIMx->CCMR1 |= TIM_CCMR1_OC2PE;
 		break;
 	}
-	case channel_3_Pwm: {
+	case PWM_CHANNEL_3: {
 
-		pt_HandlerPwm->ptTIMx->CCMR2 &= ~TIM_CCMR2_CC3S;;
+		pt_HandlerPwm->pTIMx->CCMR2 &= ~TIM_CCMR2_CC3S;;
 
-		pt_HandlerPwm->ptTIMx->CCMR2 |= TIM_CCMR2_OC3FE;
+		pt_HandlerPwm->pTIMx->CCMR2 |= TIM_CCMR2_OC3FE;
 
-		pt_HandlerPwm->ptTIMx->CCMR2 |= TIM_CCMR2_OC3M_1;
+		pt_HandlerPwm->pTIMx->CCMR2 |= TIM_CCMR2_OC3M_1;
 
-		pt_HandlerPwm->ptTIMx->CCMR2 |= TIM_CCMR2_OC3M_2;
+		pt_HandlerPwm->pTIMx->CCMR2 |= TIM_CCMR2_OC3M_2;
 
-		pt_HandlerPwm->ptTIMx->CCMR2 |= TIM_CCMR2_OC3PE;
+		pt_HandlerPwm->pTIMx->CCMR2 |= TIM_CCMR2_OC3PE;
 		break;
 	}
-	case channel_4_Pwm: {
+	case PWM_CHANNEL_4: {
 
-		pt_HandlerPwm->ptTIMx->CCMR2 &= ~TIM_CCMR2_CC4S;;
+		pt_HandlerPwm->pTIMx->CCMR2 &= ~TIM_CCMR2_CC4S;;
 
-		pt_HandlerPwm->ptTIMx->CCMR2 |= TIM_CCMR2_OC4FE;
+		pt_HandlerPwm->pTIMx->CCMR2 |= TIM_CCMR2_OC4FE;
 
-		pt_HandlerPwm->ptTIMx->CCMR2 |= TIM_CCMR2_OC4M_1;
+		pt_HandlerPwm->pTIMx->CCMR2 |= TIM_CCMR2_OC4M_1;
 
-		pt_HandlerPwm->ptTIMx->CCMR2 |= TIM_CCMR2_OC4M_2;
+		pt_HandlerPwm->pTIMx->CCMR2 |= TIM_CCMR2_OC4M_2;
 
-		pt_HandlerPwm->ptTIMx->CCMR2 |= TIM_CCMR2_OC4PE;
+		pt_HandlerPwm->pTIMx->CCMR2 |= TIM_CCMR2_OC4PE;
 		break;
 	}
 	default:{
@@ -147,51 +147,51 @@ static void preload_y_pwm(Pwm_Handler_t *pt_HandlerPwm){
 }
 }
 /*funcion para que inicie la señal*/
-void inicio_de_señal_pwm(Pwm_Handler_t *pt_HandlerPwm) {
+void inicio_de_señal_pwm(PWM_Handler_t *pt_HandlerPwm) {
 
-	pt_HandlerPwm->ptTIMx->CR1 |= TIM_CR1_ARPE;
+	pt_HandlerPwm->pTIMx->CR1 |= TIM_CR1_ARPE;
 
-	pt_HandlerPwm->ptTIMx->CR1 |= TIM_CR1_CEN;
+	pt_HandlerPwm->pTIMx->CR1 |= TIM_CR1_CEN;
 }
 /*funcion para frenar la señal del pwm*/
-void frenar_señal_pwm(Pwm_Handler_t *pt_HandlerPwm) {
-	pt_HandlerPwm->ptTIMx->CR1 &= ~TIM_CR1_ARPE;
+void frenar_señal_pwm(PWM_Handler_t *pt_HandlerPwm) {
+	pt_HandlerPwm->pTIMx->CR1 &= ~TIM_CR1_ARPE;
 
-	pt_HandlerPwm->ptTIMx->CR1 &= ~TIM_CR1_CEN;
+	pt_HandlerPwm->pTIMx->CR1 &= ~TIM_CR1_CEN;
 }
 
 /*funcion para actualizar la frecuencia*/
-void actualiza_frecuencia(Pwm_Handler_t *pt_HandlerPwm, uint16_t frecuencia_nueva){
+void actualiza_frecuencia(PWM_Handler_t *pt_HandlerPwm, uint16_t frecuencia_nueva){
 
 	pt_HandlerPwm->config.periodo = frecuencia_nueva;
 
 	establecer_la_frecuencia(&*pt_HandlerPwm);
 }
 /*funcion para actualizar el ciclo del duty*/
-void actualiza_Ciclo_Duty(Pwm_Handler_t *pt_HandlerPwm, uint16_t Duty_nuevo){
+void actualiza_Ciclo_Duty(PWM_Handler_t *pt_HandlerPwm, uint16_t Duty_nuevo){
 
-	pt_HandlerPwm->config.CicloDuty = Duty_nuevo;
+	pt_HandlerPwm->config.CicloDuty = Duty_nuevo-1;
 
 	establecer_ciclo_duty(&*pt_HandlerPwm);
 }
 /*se activa la salida*/
-void activar_salida(Pwm_Handler_t *pt_HandlerPwm) {
+void activar_salida(PWM_Handler_t *pt_HandlerPwm) {
 	switch (pt_HandlerPwm->config.Canal) {
-	case channel_1_Pwm: {
+	case PWM_CHANNEL_1: {
 
-		pt_HandlerPwm->ptTIMx->CCER |= TIM_CCER_CC1E;
+		pt_HandlerPwm->pTIMx->CCER |= TIM_CCER_CC1E;
 		break;
 	}
-	case channel_2_Pwm: {
-		pt_HandlerPwm->ptTIMx->CCER |= TIM_CCER_CC2E;
+	case PWM_CHANNEL_2: {
+		pt_HandlerPwm->pTIMx->CCER |= TIM_CCER_CC2E;
 		break;
 	}
-	case channel_3_Pwm: {
-		pt_HandlerPwm->ptTIMx->CCER |= TIM_CCER_CC3E;
+	case PWM_CHANNEL_3: {
+		pt_HandlerPwm->pTIMx->CCER |= TIM_CCER_CC3E;
 		break;
 	}
-	case channel_4_Pwm: {
-		pt_HandlerPwm->ptTIMx->CCER |= TIM_CCER_CC4E;
+	case PWM_CHANNEL_4: {
+		pt_HandlerPwm->pTIMx->CCER |= TIM_CCER_CC4E;
 		break;
 	}
 	default: {

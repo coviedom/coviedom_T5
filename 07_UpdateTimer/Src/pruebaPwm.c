@@ -29,17 +29,16 @@ uint8_t teclado = 0;
 
 /*Definimos lo relacionado al PWM*/
 GPIO_Handler_t _Pwm_pin = { 0 };
-Pwm_Handler_t _pwm_señal = {0};
+PWM_Handler_t _PWM_Muestreo = {0};
 
 /*Definimos el valor del dutty*/
-uint16_t _Duty = 200;
+uint16_t _Duty = 500;
 /*Definimos el arreglo en el que se guardará el mensaje*/
 char buffer_info[128] = {0};
 
 
 
-int main(void) {
-	start();
+int main(void) {	start();
 	config_SysTick_ms(0);
 
 	while (1) {
@@ -63,7 +62,7 @@ int main(void) {
 
 			}
 			teclado = 0;
-			actualiza_Ciclo_Duty(&_pwm_señal, _Duty);
+			actualiza_Ciclo_Duty(&_PWM_Muestreo, _Duty);
 
 
 		}
@@ -79,7 +78,7 @@ void start(void){
 	_LedBlinky.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	gpio_Config(&_LedBlinky);
 
-	_BlinkyTimer3.pTIMx = TIM3;
+	_BlinkyTimer3.pTIMx = TIM9;
 	_BlinkyTimer3.TIMx_Config.TIMx_Prescaler = 16000;
 	_BlinkyTimer3.TIMx_Config.TIMx_Period = 250;
 	_BlinkyTimer3.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
@@ -115,29 +114,29 @@ void start(void){
 	_Rx2.pinConfig.GPIO_PinAltFunMode = AF7;
 	gpio_Config(&_Rx2);
 
-	_Pwm_pin.pGPIOx = GPIOB;
-	_Pwm_pin.pinConfig.GPIO_PinNumber = PIN_10;
+	_Pwm_pin.pGPIOx = GPIOC;
+	_Pwm_pin.pinConfig.GPIO_PinNumber = PIN_7;
     _Pwm_pin.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
 	_Pwm_pin.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	_Pwm_pin.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	_Pwm_pin.pinConfig.GPIO_PinAltFunMode = AF1;
+	_Pwm_pin.pinConfig.GPIO_PinAltFunMode = AF2;
 
 	gpio_Config(&_Pwm_pin);
 
-	_pwm_señal.ptTIMx = TIM2;
-	_pwm_señal.config.Canal = channel_3_Pwm;
-	_pwm_señal.config.prescaler = 16;
-	_pwm_señal.config.periodo = 1000;
-	_pwm_señal.config.CicloDuty = _Duty;
 
-	configuracion_del_pwm(&_pwm_señal);
+	_PWM_Muestreo.pTIMx = TIM3;
+	_PWM_Muestreo.config.Canal = PWM_CHANNEL_2;
+	_PWM_Muestreo.config.prescaler = 16;
+	_PWM_Muestreo.config.periodo = 25;
+	_PWM_Muestreo.config.CicloDuty = 10;
+	configuracion_del_pwm(&_PWM_Muestreo);
 
-	activar_salida(&_pwm_señal);
-	inicio_de_señal_pwm(&_pwm_señal);
+	activar_salida(&_PWM_Muestreo);
+	inicio_de_señal_pwm(&_PWM_Muestreo);
 }
 
 /*Con esta funcion de interrupcion se cambia el estado del led dependiendo del ARR*/
-void Timer3_Callback(void){
+void Timer9_Callback(void){
 	gpio_TooglePin(&_LedBlinky);
 }
 /*Funcion que si se recibe algo por comunicacion serial almacena la informacion en la variable teclado*/
