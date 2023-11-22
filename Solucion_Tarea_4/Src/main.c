@@ -6,7 +6,6 @@
  * Fecha           : 18 de Noviembre 2023
  ******************************************************************************
  */
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stm32f4xx.h>
@@ -20,15 +19,14 @@
 #include "pwm_driver_hal.h"
 #include "timer_driver_hal.h"
 #include "arm_math.h"
+/*******************************************************************************************************************************************/
 
 /*Se hace los #define para calcular la frecuencia*/
 #define TAMAÑO_DE_DATOS 512
 #define CANTIDAD_DE_SENSORES 3
 #define FRECUENCIA_DE_MUESTREO 40000
-
 /*Se encabeza la funcion a utilizar en el programa*/
 void start(void);
-
 /*Se define el Led rojo del blinky*/
 GPIO_Handler_t led_Blinky = {0};         //PB10
 /*Se define el timer a utilizar*/
@@ -48,41 +46,45 @@ ADC_Config_t _Sensores[CANTIDAD_DE_SENSORES]= {0};
 /*Se crea el PWM que va ayudar a muestrear las señales*/
 PWM_Handler_t _PWM_Muestreo = {0};
 
+/*******************************************************************************************************************************************/
 /*Se definen los elementos necesarios para encontrar el valor maximo y minimo de la señal del sensor "A" y su frecuencia*/
 float32_t frecuencia_A = 0;  /*Frecuencia de la señal*/
 uint32_t indice_A = 0; /*Indice de la posicion de mayor valor en el arreglo de la señal original*/
-uint32_t indice_max_A =0; /*Indice de la posicion de mayor valor */
-float32_t maxValue_A;
-float32_t minValue_A;
-float32_t maxValue_Afft;
-float32_t señal_A[TAMAÑO_DE_DATOS];
-float32_t transformedSignal_A[TAMAÑO_DE_DATOS]={0};
-float32_t señal_mejorada_A[TAMAÑO_DE_DATOS]={0};
-float32_t señal_final_A[TAMAÑO_DE_DATOS] = {0};
-
-float32_t frecuencia_B = 0;
-uint32_t indice_B = 0;
-uint32_t indice_max_B =0;
-float32_t maxValue_B;
-float32_t minValue_B;
-float32_t maxValue_Bfft;
-float32_t señal_B[TAMAÑO_DE_DATOS];
-float32_t transformedSignal_B[TAMAÑO_DE_DATOS]={0};
-float32_t señal_mejorada_B[TAMAÑO_DE_DATOS]={0};
-float32_t señal_final_B[TAMAÑO_DE_DATOS] = {0};
-
-float32_t frecuencia_C = 0;
-uint32_t indice_C = 0;
-uint32_t indice_max_C =0;
-uint32_t ifftFlag = 0;
-float32_t maxValue_C;
-float32_t minValue_C;
-float32_t maxValue_Cfft;
-float32_t señal_C[TAMAÑO_DE_DATOS];
-float32_t transformedSignal_C[TAMAÑO_DE_DATOS] = {0};
-float32_t señal_mejorada_C[TAMAÑO_DE_DATOS] = {0};
-float32_t señal_final_C[TAMAÑO_DE_DATOS] = {0};
-
+uint32_t indice_max_A =0; /*Indice de la posicion de la frecuencia dominante */
+float32_t maxValue_A; /*Máximo valor de la señal original*/
+float32_t minValue_A; /*Mínimo valor de la señal original*/
+float32_t maxValue_Afft; /*maximo valor de la transformada de fourier*/
+float32_t señal_A[TAMAÑO_DE_DATOS]; /*Arreglo de datos despues de muestrear la señal con el PWM*/
+float32_t transformedSignal_A[TAMAÑO_DE_DATOS]={0}; /*Arreglo de datos despues de aplicar la transformada de fourier a la señal original*/
+float32_t señal_mejorada_A[TAMAÑO_DE_DATOS]={0}; /*Arreglo de datos de la transformada pero sin la parte compleja*/
+float32_t señal_final_A[TAMAÑO_DE_DATOS] = {0}; /*Aqui ya se encuentran los de la señal mejorada pero en valor absoluto*/
+/*******************************************************************************************************************************************/
+/*Se hace la definicion para encontrar el valor maximo y minimo de la señal del sensor "B" y su frecuencia*/
+float32_t frecuencia_B = 0; /*Frecuencia de la señal*/
+uint32_t indice_B = 0; /*Indice de la posicion de mayor valor en el arreglo de la señal original*/
+uint32_t indice_max_B =0; /*Indice de la posicion de la frecuencia dominante */
+float32_t maxValue_B; /*Máximo valor de la señal original*/
+float32_t minValue_B; /*Mínimo valor de la señal original*/
+float32_t maxValue_Bfft; /*maximo valor de la transformada de fourier*/
+float32_t señal_B[TAMAÑO_DE_DATOS]; /*Arreglo de datos despues de muestrear la señal con el PWM*/
+float32_t transformedSignal_B[TAMAÑO_DE_DATOS]={0}; /*Arreglo de datos despues de aplicar la transformada de fourier a la señal original*/
+float32_t señal_mejorada_B[TAMAÑO_DE_DATOS]={0}; /*Arreglo de datos de la transformada pero sin la parte compleja*/
+float32_t señal_final_B[TAMAÑO_DE_DATOS] = {0}; /*Aqui ya se encuentran los de la señal mejorada pero en valor absoluto*/
+/*******************************************************************************************************************************************/
+/*Se define para encontrar el maximo y minimo de la señal del sensor "C" y su frecuencia*/
+float32_t frecuencia_C = 0; /*Frecuencia de la señal*/
+uint32_t indice_C = 0; /*Indice de la posicion de mayor valor en el arreglo de la señal original*/
+uint32_t indice_max_C =0; /*Indice de la posicion de la frecuencia dominante */
+uint32_t ifftFlag = 0; /*indicador de transformada*/
+float32_t maxValue_C; /*Máximo valor de la señal original*/
+float32_t minValue_C; /*Mínimo valor de la señal original*/
+float32_t maxValue_Cfft; /*maximo valor de la transformada de fourier*/
+float32_t señal_C[TAMAÑO_DE_DATOS]; /*Arreglo de datos despues de muestrear la señal con el PWM*/
+float32_t transformedSignal_C[TAMAÑO_DE_DATOS] = {0}; /*Arreglo de datos despues de aplicar la transformada de fourier a la señal original*/
+float32_t señal_mejorada_C[TAMAÑO_DE_DATOS] = {0}; /*Arreglo de datos de la transformada pero sin la parte compleja*/
+float32_t señal_final_C[TAMAÑO_DE_DATOS] = {0}; /*Aqui ya se encuentran los de la señal mejorada pero en valor absoluto*/
+/*******************************************************************************************************************************************/
+/**/
 uint16_t tecla_A = 0;
 uint16_t bandera_final_A = 0;
 uint16_t contad_A = 0;
