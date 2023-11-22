@@ -114,6 +114,7 @@ int main(void) {
 	start();
 	/*Lo que realiza el codigo ciclicamente*/
 	while (1) {
+/*******************************************************************************************************************************************/
 
 		if (bandera_final_A) {
 			bandera_final_A = RESET;
