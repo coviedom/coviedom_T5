@@ -35,6 +35,7 @@ Timer_Handler_t timer_del_Blinky = {0};
 GPIO_Handler_t Transmisor = {0};   //PA2
 GPIO_Handler_t Receptor = {0};     //PA3
 USART_Handler_t usart2 = {0};
+uint8_t teclado = 0; /*variable que guarda el caracter recibido tras presionar una tecla*/
 /*Definimos el arreglo en el que se guardará el mensaje para cool Term*/
 char buffer_info[128] = {0};
 /*Se define los tres sensores tipo ADC_Config_t*/
@@ -47,7 +48,7 @@ ADC_Config_t _Sensores[CANTIDAD_DE_SENSORES]= {0};
 PWM_Handler_t _PWM_Muestreo = {0};
 
 /*******************************************************************************************************************************************/
-/*Se definen los elementos necesarios para encontrar el valor maximo y minimo de la señal del sensor "A" y su frecuencia*/
+/*Para la señal "A" se hace las definiciones para encontrar el máximo, mínimo y su frecuencia*/
 float32_t frecuencia_A = 0;  /*Frecuencia de la señal*/
 uint32_t indice_A = 0; /*Indice de la posicion de mayor valor en el arreglo de la señal original*/
 uint32_t indice_max_A =0; /*Indice de la posicion de la frecuencia dominante */
@@ -59,7 +60,7 @@ float32_t transformedSignal_A[TAMAÑO_DE_DATOS]={0}; /*Arreglo de datos despues 
 float32_t señal_mejorada_A[TAMAÑO_DE_DATOS]={0}; /*Arreglo de datos de la transformada pero sin la parte compleja*/
 float32_t señal_final_A[TAMAÑO_DE_DATOS] = {0}; /*Aqui ya se encuentran los de la señal mejorada pero en valor absoluto*/
 /*******************************************************************************************************************************************/
-/*Se hace la definicion para encontrar el valor maximo y minimo de la señal del sensor "B" y su frecuencia*/
+/*Para la señal "B" se hace las definiciones para encontrar el máximo, mínimo y su frecuencia*/
 float32_t frecuencia_B = 0; /*Frecuencia de la señal*/
 uint32_t indice_B = 0; /*Indice de la posicion de mayor valor en el arreglo de la señal original*/
 uint32_t indice_max_B =0; /*Indice de la posicion de la frecuencia dominante */
@@ -71,7 +72,7 @@ float32_t transformedSignal_B[TAMAÑO_DE_DATOS]={0}; /*Arreglo de datos despues 
 float32_t señal_mejorada_B[TAMAÑO_DE_DATOS]={0}; /*Arreglo de datos de la transformada pero sin la parte compleja*/
 float32_t señal_final_B[TAMAÑO_DE_DATOS] = {0}; /*Aqui ya se encuentran los de la señal mejorada pero en valor absoluto*/
 /*******************************************************************************************************************************************/
-/*Se define para encontrar el maximo y minimo de la señal del sensor "C" y su frecuencia*/
+/*Para la señal "C" se hace las definiciones para encontrar el máximo, mínimo y su frecuencia*/
 float32_t frecuencia_C = 0; /*Frecuencia de la señal*/
 uint32_t indice_C = 0; /*Indice de la posicion de mayor valor en el arreglo de la señal original*/
 uint32_t indice_max_C =0; /*Indice de la posicion de la frecuencia dominante */
@@ -84,29 +85,27 @@ float32_t transformedSignal_C[TAMAÑO_DE_DATOS] = {0}; /*Arreglo de datos despue
 float32_t señal_mejorada_C[TAMAÑO_DE_DATOS] = {0}; /*Arreglo de datos de la transformada pero sin la parte compleja*/
 float32_t señal_final_C[TAMAÑO_DE_DATOS] = {0}; /*Aqui ya se encuentran los de la señal mejorada pero en valor absoluto*/
 /*******************************************************************************************************************************************/
-/**/
-uint16_t tecla_A = 0;
-uint16_t bandera_final_A = 0;
-uint16_t contad_A = 0;
-
-uint16_t tecla_B = 0;
-uint16_t bandera_final_B = 0;
-uint16_t contad_B = 0;
-
-uint16_t tecla_C = 0;
-uint16_t bandera_final_C = 0;
-uint16_t contad_C = 0;
-
-
+/*Para la señal "A" Se define lo que nos ayudara a inciar y terminar la recoleccion de los datos*/
+uint16_t tecla_A = 0; /*Esta bandera inicia la recoleccion de los datos a la vez que se enciende el PWM*/
+uint16_t bandera_final_A = 0; /*Esta bandera indica que se ha termidado de recolectar los datos*/
+uint16_t contad_A = 0; /*Este contador es quien ayuda a recoger los datos hasta 512*/
+/*******************************************************************************************************************************************/
+/*Para la señal "B" Se define lo que nos ayudara a inciar y terminar la recoleccion de los datos*/
+uint16_t tecla_B = 0;/*Esta bandera inicia la recoleccion de los datos a la vez que se enciende el PWM*/
+uint16_t bandera_final_B = 0; /*Esta bandera indica que se ha termidado de recolectar los datos*/
+uint16_t contad_B = 0;  /*Este contador es quien ayuda a recoger los datos hasta 512*/
+/*******************************************************************************************************************************************/
+/*Para la señal "C" Se define lo que nos ayudara a inciar y terminar la recoleccion de los datos*/
+uint16_t tecla_C = 0; /*Esta bandera inicia la recoleccion de los datos a la vez que se enciende el PWM*/
+uint16_t bandera_final_C = 0; /*Esta bandera indica que se ha termidado de recolectar los datos*/
+uint16_t contad_C = 0; /*Este contador es quien ayuda a recoger los datos hasta 512*/
+/*******************************************************************************************************************************************/
+/*Se definen los elementos necesarios para poder calcular la transformada de fourier*/
 arm_rfft_fast_instance_f32 config_Rfft_fast_f32;
 arm_status status =ARM_MATH_ARGUMENT_ERROR;
 arm_status statusInitFFT = ARM_MATH_ARGUMENT_ERROR;
-
-/*variable que guarda el caracter recibido tras presionar una tecla*/
-uint8_t teclado = 0;
-/*Se crea una variable para guardar las conversiones que se hace en cada canal*/
-uint8_t _Contador_Secuencia = 0;
-
+/*******************************************************************************************************************************************/
+uint8_t _Contador_Secuencia = 0; /*Contador de la secuencia de conversion*/
 
 int main(void) {
 	/*Se activa el co-procesador FPU*/
@@ -189,10 +188,10 @@ int main(void) {
 				teclado = 0;
 			}
 		}
-		}
+	}
 }
 void start(void) {
-	/*Se configura el led azul del blinky*/
+	/*Se configura el led rojo del blinky*/
 	led_Blinky.pGPIOx = GPIOB;
 	led_Blinky.pinConfig.GPIO_PinNumber = PIN_10;
 	led_Blinky.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
@@ -207,9 +206,9 @@ void start(void) {
 	timer_del_Blinky.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
 	timer_del_Blinky.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
 	timer_Config(&timer_del_Blinky);
-	/*que el timer esté encendido*/
+	/*Que el timer esté encendido*/
 	timer_SetState(&timer_del_Blinky, TIMER_ON);
-	/*Se congura el usart de comunicacion serial*/
+	/*Se configura el usart de comunicacion serial*/
 	usart2.ptrUSARTx = USART2;
 	usart2.USART_Config.baudrate = USART_BAUDRATE_115200;
 	usart2.USART_Config.datasize = USART_DATASIZE_8BIT;
@@ -269,8 +268,7 @@ void start(void) {
 	_PWM_Muestreo.config.CicloDuty = 2;
 	configuracion_del_pwm(&_PWM_Muestreo);
 	inicio_de_señal_pwm(&_PWM_Muestreo);
-
-	/*Se configura el trigger externo*/
+	/*Se configura el trigger externo con PWM*/
 	adc_ConfigTrigger (TRIGGER_EXT, &_PWM_Muestreo);
 }
 /*Con esta funcion de interrupcion se cambia el estado del led dependiendo del ARR*/
@@ -281,68 +279,78 @@ void Timer9_Callback(void) {
 void usart2_RxCallback(void) {
 	teclado = usart_getRxData();
 }
-/* */
+/*Esta funcion se activa por cada conversion segun la secuencia*/
 void adc_CompleteCallback(void) {
-
+	/*Dependiendo de la secuencia de conversion, es decir del Contador Secuencia, se hace la toma del dato*/
 	_Sensores[_Contador_Secuencia].adcData = adc_GetValue();
 
+/*******************************************************************************************************************************************/
+	/*Si se ha presionado la tecla "a" ocurrira lo siguiente */
 	if (tecla_A) {
+		/*Se evalua si se acaba de hacer una sola conversion del sensor 1*/
 		if (_Contador_Secuencia == 0) {
+			/*Se almacena secuencialmente el dato ADC del sensor 1 en el arreglo de 512 datos llamado Señal A*/
 			señal_A[contad_A] = _Sensores[0].adcData;
+			/*Se incrementa este contador con el fin de llenar el arreglo hasta 512*/
 			contad_A++;
+			/*Se evalua si se llega a 512 datos*/
 			if (contad_A == TAMAÑO_DE_DATOS) {
+				/*Se reinicia el contador en caso de que quiera por accion de la tecla "a" volver a recolectar datos*/
 				contad_A = 0;
+				/*Se levanta la bandera para que no se siga recolectando los datos en este arreglo Señal A*/
 				tecla_A = RESET;
+				/*Se levanta la bandera indicando que se terminó la recolección*/
 				bandera_final_A = SET;
 			}
 		}
 	}
-
+/*******************************************************************************************************************************************/
+	/*Si se ha presionado la tecla "b" ocurrira lo siguiente */
 	if (tecla_B) {
+		/*Se evalua si se acaba de hacer una sola conversion del sensor 2*/
 		if (_Contador_Secuencia == 1) {
+			/*Se almacena secuencialmente el dato ADC del sensor 2 en el arreglo de 512 datos llamado Señal B*/
 			señal_B[contad_B] = _Sensores[1].adcData;
+			/*Se incrementa este contador con el fin de llenar el arreglo hasta 512*/
 			contad_B++;
+			/*Se evalua si se llega a 512 datos*/
 			if (contad_B == TAMAÑO_DE_DATOS) {
+				/*Se reinicia el contador en caso de que quiera por accion de la tecla "b" volver a recolectar datos*/
 				contad_B = 0;
+				/*Se levanta la bandera para que no se siga recolectando los datos en este arreglo Señal B*/
 				tecla_B = RESET;
+				/*Se levanta la bandera indicando que se terminó la recolección*/
 				bandera_final_B = SET;
 			}
 		}
 	}
-
+/*******************************************************************************************************************************************/
+	/*Si se ha presionado la tecla "c" ocurrira lo siguiente */
 	if (tecla_C) {
+		/*Se evalua si se acaba de hacer una sola conversion del sensor 3*/
 		if (_Contador_Secuencia == 2) {
+			/*Se almacena secuencialmente el dato ADC del sensor 3 en el arreglo de 512 datos llamado Señal C*/
 			señal_C[contad_C] = _Sensores[2].adcData;
+			/*Se incrementa este contador con el fin de llenar el arreglo hasta 512*/
 			contad_C++;
+			/*Se evalua si se llega a 512 datos*/
 			if (contad_C == TAMAÑO_DE_DATOS) {
+				/*Se reinicia el contador en caso de que quiera por accion de la tecla "c" volver a recolectar datos*/
 				contad_C = 0;
+				/*Se levanta la bandera para que no se siga recolectando los datos en este arreglo Señal C*/
 				tecla_C = RESET;
+				/*Se levanta la bandera indicando que se terminó la recolección*/
 				bandera_final_C = SET;
 			}
 		}
 	}
+	/*Se incrementa el contador para llevar la cuenta de la secuencia de conversion ADC*/
 	_Contador_Secuencia++;
+	/*Se evalua si la secuencia ha llegado a 3, el cual es el numero de canales*/
 	if (_Contador_Secuencia >=CANTIDAD_DE_SENSORES){
+		/*Se reinicia el contador para estar al ritmo de la secuencia de conversion ADC*/
 		_Contador_Secuencia = 0;
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*FINISH*/
