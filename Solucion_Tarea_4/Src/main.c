@@ -5,7 +5,7 @@
  * @brief          : Solución de la Tarea 4 de Taller 5
  * Fecha           : 18 de Noviembre 2023
  ******************************************************************************
- */
+*/
 #include <stdint.h>
 #include <stdio.h>
 #include <stm32f4xx.h>
@@ -115,82 +115,135 @@ int main(void) {
 	/*Lo que realiza el codigo ciclicamente*/
 	while (1) {
 /*******************************************************************************************************************************************/
-
+        /*Se evalua si se ha levantado la bandera de finalizacion de recoleción de datos de la señal A*/
 		if (bandera_final_A) {
+			/*Se baja la bandera en caso que quiera volver a hacer el mismo proceso*/
 			bandera_final_A = RESET;
+			/*Se detiene el muestreo del PWM*/
 			frenar_señal_pwm (&_PWM_Muestreo);
+			/*Con la siguiente funcion se obtiene el valor máximo de la señal A*/
 			arm_absmax_f32 (señal_A, TAMAÑO_DE_DATOS, &maxValue_A, &indice_A);
+			/*Con la siguiente funcion se obtiene el valor mínimo  de la señal*/
 			arm_min_f32(señal_A, TAMAÑO_DE_DATOS, &minValue_A, &indice_A);
+			/*Se inicializa la funcion para poder obtener la transformada*/
 			statusInitFFT=arm_rfft_fast_init_f32(&config_Rfft_fast_f32,TAMAÑO_DE_DATOS);
 			if(statusInitFFT == ARM_MATH_SUCCESS){
-			arm_rfft_fast_f32(&config_Rfft_fast_f32, señal_A,transformedSignal_A, ifftFlag);
-			arm_cmplx_mag_f32(transformedSignal_A,señal_mejorada_A,TAMAÑO_DE_DATOS/2);
-			arm_abs_f32(señal_mejorada_A,señal_final_A,TAMAÑO_DE_DATOS/2);
-			señal_final_A[0] = 0;
-			arm_max_f32(señal_final_A, TAMAÑO_DE_DATOS/2, &maxValue_Afft, &indice_max_A);
-			frecuencia_A = ((indice_max_A*FRECUENCIA_DE_MUESTREO)/TAMAÑO_DE_DATOS)/2;
-			usart_writeMsg(&usart2, "Sensor 1 __________________________\n\r");
-			sprintf(buffer_info, "Frecuencia = %.f [Hz]\n\rMáximo de la señal = %.f = %.1f [V]\n\rMínimo de la señal = %.f = %.1f [V] \n\r", frecuencia_A,maxValue_A,maxValue_A*(float)(3.3 / 4095),minValue_A,minValue_A*(float)(3.3 / 4095));
-			usart_writeMsg(&usart2, buffer_info);
+				/*Funcion para obtener la transformada de los 512 datos recolectados*/
+			    arm_rfft_fast_f32(&config_Rfft_fast_f32, señal_A,transformedSignal_A, ifftFlag);
+			    /*Con esta funcion quitamos los complejos y los almacenamos en el nuevo arreglo llamado Señal mejorada*/
+			    arm_cmplx_mag_f32(transformedSignal_A,señal_mejorada_A,TAMAÑO_DE_DATOS/2);
+			    /*Se toma el valor absoluto del arreglo resultado anterior*/
+			    arm_abs_f32(señal_mejorada_A,señal_final_A,TAMAÑO_DE_DATOS/2);
+			    /*Se quita siempre el dato cero ya que segun la tansformada de fourier este siempre da alto*/
+			    señal_final_A[0] = 0;
+			    /*Tomamos el valor máximo del arreglo anterior logrando tener el indice max A, osea la posicion de la frecuencia dominante*/
+			    arm_max_f32(señal_final_A, TAMAÑO_DE_DATOS/2, &maxValue_Afft, &indice_max_A);
+			    /*Se calcula la frecuencia de la señal original*/
+			    frecuencia_A = ((indice_max_A*FRECUENCIA_DE_MUESTREO)/TAMAÑO_DE_DATOS)/2;
+			    /*Se imprime los resultados*/
+			    usart_writeMsg(&usart2, "Sensor 1 __________________________\n\r");
+			    sprintf(buffer_info, "Frecuencia = %.f [Hz]\n\rMáximo de la señal = %.f = %.1f [V]\n\rMínimo de la señal = %.f = %.1f [V] \n\r", frecuencia_A,maxValue_A,maxValue_A*(float)(3.3 / 4095),minValue_A,minValue_A*(float)(3.3 / 4095));
+			    usart_writeMsg(&usart2, buffer_info);
 			}
 		}
-
+/*******************************************************************************************************************************************/
+        /*Se evalua si se ha levantado la bandera de finalizacion de recoleción de datos de la señal B*/
 		if (bandera_final_B) {
+			/*Se baja la bandera en caso que quiera volver a hacer el mismo proceso*/
 			bandera_final_B = RESET;
+			/*Se detiene el muestreo del PWM*/
 			frenar_señal_pwm (&_PWM_Muestreo);
+			/*Con la siguiente funcion se obtiene el valor máximo de la señal B*/
 			arm_absmax_f32 (señal_B, TAMAÑO_DE_DATOS, &maxValue_B, &indice_B);
+			/*Con la siguiente funcion se obtiene el valor mínimo  de la señal*/
 			arm_min_f32(señal_B, TAMAÑO_DE_DATOS, &minValue_B, &indice_B);
+			/*Se inicializa la funcion para poder obtener la transformada*/
 			statusInitFFT=arm_rfft_fast_init_f32(&config_Rfft_fast_f32,TAMAÑO_DE_DATOS);
 			if(statusInitFFT == ARM_MATH_SUCCESS){
-			arm_rfft_fast_f32(&config_Rfft_fast_f32, señal_B,transformedSignal_B, ifftFlag);
-			arm_cmplx_mag_f32(transformedSignal_B,señal_mejorada_B,TAMAÑO_DE_DATOS/2);
-			arm_abs_f32(señal_mejorada_B,señal_final_B,TAMAÑO_DE_DATOS/2);
-			señal_final_B[0] = 0;
-			arm_max_f32(señal_final_B, TAMAÑO_DE_DATOS/2, &maxValue_Bfft, &indice_max_B);
-			frecuencia_B = ((indice_max_B*FRECUENCIA_DE_MUESTREO)/TAMAÑO_DE_DATOS)/2;
-			usart_writeMsg(&usart2, "Sensor 2 __________________________\n\r");
-			sprintf(buffer_info, "Frecuencia = %.f [Hz]\n\rMáximo de la señal = %.f = %.1f [V]\n\rMínimo de la señal = %.f = %.1f [V] \n\r", frecuencia_B,maxValue_B,maxValue_B*(float)(3.3 / 4095),minValue_B,minValue_B*(float)(3.3 / 4095));
-			usart_writeMsg(&usart2, buffer_info);
+				/*Funcion para obtener la transformada de los 512 datos recolectados*/
+                arm_rfft_fast_f32(&config_Rfft_fast_f32, señal_B,transformedSignal_B, ifftFlag);
+			    /*Con esta funcion quitamos los complejos y los almacenamos en el nuevo arreglo llamado Señal mejorada*/
+			    arm_cmplx_mag_f32(transformedSignal_B,señal_mejorada_B,TAMAÑO_DE_DATOS/2);
+			    /*Se toma el valor absoluto del arreglo resultado anterior*/
+			    arm_abs_f32(señal_mejorada_B,señal_final_B,TAMAÑO_DE_DATOS/2);
+			    /*Se quita siempre el dato cero ya que segun la tansformada de fourier este siempre da alto*/
+			    señal_final_B[0] = 0;
+			    /*Tomamos el valor máximo del arreglo anterior logrando tener el indice max B, osea la posicion de la frecuencia dominante*/
+			    arm_max_f32(señal_final_B, TAMAÑO_DE_DATOS/2, &maxValue_Bfft, &indice_max_B);
+			    /*Se calcula la frecuencia de la señal original*/
+			    frecuencia_B = ((indice_max_B*FRECUENCIA_DE_MUESTREO)/TAMAÑO_DE_DATOS)/2;
+			    /*Se imprime los resultados*/
+			    usart_writeMsg(&usart2, "Sensor 2 __________________________\n\r");
+			    sprintf(buffer_info, "Frecuencia = %.f [Hz]\n\rMáximo de la señal = %.f = %.1f [V]\n\rMínimo de la señal = %.f = %.1f [V] \n\r", frecuencia_B,maxValue_B,maxValue_B*(float)(3.3 / 4095),minValue_B,minValue_B*(float)(3.3 / 4095));
+			    usart_writeMsg(&usart2, buffer_info);
 			}
 		}
+/*******************************************************************************************************************************************/
+        /*Se evalua si se ha levantado la bandera de finalizacion de recoleción de datos de la señal C*/
 		if (bandera_final_C) {
+			/*Se baja la bandera en caso que quiera volver a hacer el mismo proceso*/
 			bandera_final_C = RESET;
+			/*Se detiene el muestreo del PWM*/
 			frenar_señal_pwm (&_PWM_Muestreo);
+			/*Con la siguiente funcion se obtiene el valor máximo de la señal C*/
 			arm_absmax_f32 (señal_C, TAMAÑO_DE_DATOS, &maxValue_C, &indice_C);
+			/*Con la siguiente funcion se obtiene el valor mínimo  de la señal*/
 			arm_min_f32(señal_C, TAMAÑO_DE_DATOS, &minValue_C, &indice_C);
+			/*Se inicializa la funcion para poder obtener la transformada*/
 			statusInitFFT=arm_rfft_fast_init_f32(&config_Rfft_fast_f32,TAMAÑO_DE_DATOS);
 			if(statusInitFFT == ARM_MATH_SUCCESS){
-			arm_rfft_fast_f32(&config_Rfft_fast_f32, señal_C,transformedSignal_C, ifftFlag);
-			arm_cmplx_mag_f32(transformedSignal_C,señal_mejorada_C,TAMAÑO_DE_DATOS/2);
-			arm_abs_f32(señal_mejorada_C,señal_final_C,TAMAÑO_DE_DATOS/2);
-			señal_final_C[0] = 0;
-			arm_max_f32(señal_final_C, TAMAÑO_DE_DATOS/2, &maxValue_Cfft, &indice_max_C);
-			frecuencia_C = ((indice_max_C*FRECUENCIA_DE_MUESTREO)/TAMAÑO_DE_DATOS)/2;
-			usart_writeMsg(&usart2, "Sensor 3 __________________________\n\r");
-			sprintf(buffer_info, "Frecuencia = %.f [Hz]\n\rMáximo de la señal = %.f = %.1f [V]\n\rMínimo de la señal = %.f = %.1f [V] \n\r", frecuencia_C,maxValue_C,maxValue_C*(float)(3.3 / 4095),minValue_C,minValue_C*(float)(3.3 / 4095));
-			usart_writeMsg(&usart2, buffer_info);
+				/*Funcion para obtener la transformada de los 512 datos recolectados*/
+                arm_rfft_fast_f32(&config_Rfft_fast_f32, señal_C,transformedSignal_C, ifftFlag);
+			    /*Con esta funcion quitamos los complejos y los almacenamos en el nuevo arreglo llamado Señal mejorada*/
+			    arm_cmplx_mag_f32(transformedSignal_C,señal_mejorada_C,TAMAÑO_DE_DATOS/2);
+			    /*Se toma el valor absoluto del arreglo resultado anterior*/
+			    arm_abs_f32(señal_mejorada_C,señal_final_C,TAMAÑO_DE_DATOS/2);
+			    /*Se quita siempre el dato cero ya que segun la tansformada de fourier este siempre da alto*/
+			    señal_final_C[0] = 0;
+			    /*Tomamos el valor máximo del arreglo anterior logrando tener el indice max C, osea la posicion de la frecuencia dominante*/
+			    arm_max_f32(señal_final_C, TAMAÑO_DE_DATOS/2, &maxValue_Cfft, &indice_max_C);
+			    /*Se calcula la frecuencia de la señal original*/
+			    frecuencia_C = ((indice_max_C*FRECUENCIA_DE_MUESTREO)/TAMAÑO_DE_DATOS)/2;
+			    /*Se imprime los resultados*/
+			    usart_writeMsg(&usart2, "Sensor 3 __________________________\n\r");
+			    sprintf(buffer_info, "Frecuencia = %.f [Hz]\n\rMáximo de la señal = %.f = %.1f [V]\n\rMínimo de la señal = %.f = %.1f [V] \n\r", frecuencia_C,maxValue_C,maxValue_C*(float)(3.3 / 4095),minValue_C,minValue_C*(float)(3.3 / 4095));
+			    usart_writeMsg(&usart2, buffer_info);
 			}
 		}
+/*******************************************************************************************************************************************/
+        /*Lo siguiente ocurre si presiona una letra del teclado*/
 		if (teclado != '\0') {
-
+			/*Si se presiona la letra "a"*/
 			if (teclado == 'a') {
+				/*Se enciende el PWM de muestreo*/
 				inicio_de_señal_pwm(&_PWM_Muestreo);
+				/*Se sube la bandera que inicia la recoleccion de datos para la señal del sensor 1*/
 				tecla_A = SET;
+				/*Se hace cero a teclado para poder volver a ingresar la letra si asi lo quiere*/
 				teclado = 0;
 			}
+			/*Si se presiona la letra "b"*/
 			if (teclado == 'b') {
+				/*Se enciende el PWM de muestreo*/
 				inicio_de_señal_pwm(&_PWM_Muestreo);
+				/*Se sube la bandera que inicia la recoleccion de datos para la señal del sensor 2*/
 				tecla_B = SET;
+				/*Se hace cero a teclado para poder volver a ingresar la letra si asi lo quiere*/
 				teclado = 0;
 			}
+			/*Si se presiona la letra "c"*/
 			if (teclado == 'c') {
+				/*Se enciende el PWM de muestreo*/
 				inicio_de_señal_pwm(&_PWM_Muestreo);
+				/*Se sube la bandera que inicia la recoleccion de datos para la señal del sensor 3*/
 				tecla_C = SET;
+				/*Se hace cero a teclado para poder volver a ingresar la letra si asi lo quiere*/
 				teclado = 0;
 			}
 		}
 	}
 }
+/*******************************************************************************************************************************************/
 void start(void) {
 	/*Se configura el led rojo del blinky*/
 	led_Blinky.pGPIOx = GPIOB;
@@ -272,6 +325,8 @@ void start(void) {
 	/*Se configura el trigger externo con PWM*/
 	adc_ConfigTrigger (TRIGGER_EXT, &_PWM_Muestreo);
 }
+/*******************************************************************************************************************************************/
+
 /*Con esta funcion de interrupcion se cambia el estado del led dependiendo del ARR*/
 void Timer9_Callback(void) {
 	gpio_TooglePin(&led_Blinky);
@@ -345,6 +400,7 @@ void adc_CompleteCallback(void) {
 			}
 		}
 	}
+/*******************************************************************************************************************************************/
 	/*Se incrementa el contador para llevar la cuenta de la secuencia de conversion ADC*/
 	_Contador_Secuencia++;
 	/*Se evalua si la secuencia ha llegado a 3, el cual es el numero de canales*/
@@ -353,5 +409,4 @@ void adc_CompleteCallback(void) {
 		_Contador_Secuencia = 0;
 	}
 }
-
-/*FINISH*/
+/*FINISH*//*********************************************************************************************************************************/
