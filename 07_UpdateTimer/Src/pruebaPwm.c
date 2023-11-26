@@ -70,7 +70,7 @@ int main(void) {	start();
 }
 
 void start(void){
-	_LedBlinky.pGPIOx = GPIOA;
+	_LedBlinky.pGPIOx = GPIOB;
 	_LedBlinky.pinConfig.GPIO_PinNumber = PIN_10;
 	_LedBlinky.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	_LedBlinky.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
@@ -114,21 +114,21 @@ void start(void){
 	_Rx2.pinConfig.GPIO_PinAltFunMode = AF7;
 	gpio_Config(&_Rx2);
 
-	_Pwm_pin.pGPIOx = GPIOC;
-	_Pwm_pin.pinConfig.GPIO_PinNumber = PIN_7;
+	_Pwm_pin.pGPIOx = GPIOA;
+	_Pwm_pin.pinConfig.GPIO_PinNumber = PIN_1;
     _Pwm_pin.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
 	_Pwm_pin.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	_Pwm_pin.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	_Pwm_pin.pinConfig.GPIO_PinAltFunMode = AF2;
+	_Pwm_pin.pinConfig.GPIO_PinAltFunMode = AF1;
 
 	gpio_Config(&_Pwm_pin);
 
 
-	_PWM_Muestreo.pTIMx = TIM3;
+	_PWM_Muestreo.pTIMx = TIM2;
 	_PWM_Muestreo.config.Canal = PWM_CHANNEL_2;
 	_PWM_Muestreo.config.prescaler = 16;
-	_PWM_Muestreo.config.periodo = 25;
-	_PWM_Muestreo.config.CicloDuty = 10;
+	_PWM_Muestreo.config.periodo = 1000;
+	_PWM_Muestreo.config.CicloDuty = 500;
 	configuracion_del_pwm(&_PWM_Muestreo);
 
 	activar_salida(&_PWM_Muestreo);
