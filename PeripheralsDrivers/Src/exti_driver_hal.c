@@ -575,6 +575,7 @@ static void exti_assign_channel(EXTI_Config_t *extiConfig) {
  * Funcion para seleccionar adecuadamente el flanco que lanza la interrupcion
  * en el canal EXTI especifico.
  * */
+
 static void exti_select_edge(EXTI_Config_t *extiConfig) {
 
 	if (extiConfig->edgeType == EXTERNAL_INTERRUPT_FALLING_EDGE) {
@@ -651,7 +652,7 @@ static void exti_select_edge(EXTI_Config_t *extiConfig) {
 		}
 	}
 
-	else {
+	else if (extiConfig->edgeType == EXTERNAL_INTERRUPT_RISING_EDGE){
 		//
 		switch (extiConfig->pGPIOHandler->pinConfig.GPIO_PinNumber) {
 		case 0: {
@@ -723,6 +724,96 @@ static void exti_select_edge(EXTI_Config_t *extiConfig) {
 		}
 		}
 	}
+	else{
+		switch (extiConfig->pGPIOHandler->pinConfig.GPIO_PinNumber) {
+			case 0: {
+				EXTI->RTSR |= (EXTI_RTSR_TR0);
+				EXTI->FTSR |= (EXTI_FTSR_TR0);
+				break;
+			}
+			case 1: {
+				EXTI->RTSR |= (EXTI_RTSR_TR1);
+				EXTI->FTSR |= (EXTI_FTSR_TR1);
+				break;
+			}
+			case 2: {
+				EXTI->RTSR |= (EXTI_RTSR_TR2);
+				EXTI->FTSR |= (EXTI_FTSR_TR2);
+				break;
+			}
+			case 3: {
+				EXTI->RTSR |= (EXTI_RTSR_TR3);
+				EXTI->FTSR |= (EXTI_FTSR_TR3);
+				break;
+			}
+			case 4: {
+				EXTI->RTSR |= (EXTI_RTSR_TR4);
+				EXTI->FTSR |= (EXTI_FTSR_TR4);
+				break;
+			}
+			case 5: {
+				EXTI->RTSR |= (EXTI_RTSR_TR5);
+				EXTI->FTSR |= (EXTI_FTSR_TR5);
+				break;
+			}
+			case 6: {
+				EXTI->RTSR |= (EXTI_RTSR_TR6);
+				EXTI->FTSR |= (EXTI_FTSR_TR6);
+				break;
+			}
+			case 7: {
+				EXTI->RTSR |= (EXTI_RTSR_TR7);
+				EXTI->FTSR |= (EXTI_FTSR_TR7);
+				break;
+			}
+			case 8: {
+				EXTI->RTSR |= (EXTI_RTSR_TR8);
+				EXTI->FTSR |= (EXTI_FTSR_TR8);
+				break;
+			}
+			case 9: {
+				EXTI->RTSR |= (EXTI_RTSR_TR9);
+				EXTI->FTSR |= (EXTI_FTSR_TR9);
+				break;
+			}
+			case 10: {
+				EXTI->RTSR |= (EXTI_RTSR_TR10);
+				EXTI->FTSR |= (EXTI_FTSR_TR10);
+				break;
+			}
+			case 11: {
+				EXTI->RTSR |= (EXTI_RTSR_TR11);
+				EXTI->FTSR |= (EXTI_FTSR_TR11);
+				break;
+			}
+			case 12: {
+				EXTI->RTSR |= (EXTI_RTSR_TR12);
+				EXTI->FTSR |= (EXTI_FTSR_TR12);
+				break;
+			}
+			case 13: {
+				EXTI->RTSR |= (EXTI_RTSR_TR13);
+				EXTI->FTSR |= (EXTI_FTSR_TR13);
+				break;
+			}
+			case 14: {
+				EXTI->RTSR |= (EXTI_RTSR_TR14);
+				EXTI->FTSR |= (EXTI_FTSR_TR14);
+				break;
+			}
+			case 15: {
+				EXTI->RTSR |= (EXTI_RTSR_TR15);
+				EXTI->FTSR |= (EXTI_FTSR_TR15);
+				break;
+			}
+			default: {
+				__NOP();
+				break;
+			}
+		}
+
+	}
+
 }
 
 /*

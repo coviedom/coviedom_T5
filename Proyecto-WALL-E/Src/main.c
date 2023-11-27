@@ -20,7 +20,7 @@
 #include "timer_driver_hal.h"
 #include "arm_math.h"
 /*******************************************************************************************************************************************/
-
+#define CANTIDAD_DE_SENSORES 2
 /*Se encabeza la funcion a utilizar en el programa*/
 void start(void);
 /*Se define el Led rojo del blinky*/
@@ -35,17 +35,29 @@ uint8_t teclado = 0; /*variable que guarda el caracter recibido tras presionar u
 /*Definimos el arreglo en el que se guardará el mensaje para cool Term*/
 char buffer_info[128] = {0};
 
-uint16_t _Duty = 500;
+uint16_t _Duty = 800;
 PWM_Handler_t _PWM_ENA = {0};
 GPIO_Handler_t _ENA = {0};
 GPIO_Handler_t _IN1 = {0};
 GPIO_Handler_t _IN2 = {0};
 
-uint16_t _Duty2 = 500;
+uint16_t _Duty2 = 800;
 PWM_Handler_t _PWM_ENB = {0};
 GPIO_Handler_t _ENB = {0};
 GPIO_Handler_t _IN3 = {0};
 GPIO_Handler_t _IN4 = {0};
+
+PWM_Handler_t _PWM_Muestreo = {0};
+ADC_Config_t arreglo_ejes[CANTIDAD_DE_SENSORES]= {0};
+ADC_Config_t ejeX = {0};
+ADC_Config_t ejeY = {0};
+uint16_t Lectura_ejeX = 0;
+uint16_t Lectura_ejeY = 0;
+uint8_t _Contador_Secuencia = 0; /*Contador de la secuencia de conversion*/
+
+uint8_t flag_boton = 0;
+EXTI_Config_t _Exti1Botton = {0};
+GPIO_Handler_t _SW_cambiaPWM = {0};	//PIN A1
 
 int main(void) {
 	/*Se activa el co-procesador FPU*/
@@ -54,109 +66,146 @@ int main(void) {
 	start();
 	/*Lo que realiza el codigo ciclicamente*/
 	while (1) {
-/*******************************************************************************************************************************************/
-
-		/*Lo siguiente ocurre si presiona una letra del teclado*/
-		if (teclado != '\0') {
-			if (teclado == 'x'){
-				_Duty -= 50;
-				_Duty2 -= 50;
-				if (_Duty < 50 || _Duty2 < 50){
-					_Duty = 50;
-					_Duty2 = 50;
-
-				}
-				sprintf(buffer_info, "Dutty =%u \n",(unsigned int)_Duty);
-				usart_writeMsg(&usart, buffer_info);
-				teclado = 0;
-
-			}
-			if (teclado == 'z'){
-				_Duty += 50;
-				_Duty2 += 50;
-				if (_Duty > 1000 || _Duty2 > 1000){
-					_Duty = 1000;
-					_Duty2 = 1000;
-				}
-				sprintf(buffer_info, "Dutty =%u \n",(unsigned int)_Duty);
-				usart_writeMsg(&usart, buffer_info);
-				teclado = 0;
-
-			}
-			actualiza_Ciclo_Duty(&_PWM_ENB, _Duty2);
-			actualiza_Ciclo_Duty(&_PWM_ENA, _Duty);
 
 
-			/*Si se presiona la letra "a"*/
-			if (teclado == 'w') {
-				usart_writeMsg(&usart,"Adelante\n\r");
-				gpio_WritePin(&_IN1,RESET);
-				gpio_WritePin(&_IN2,SET);
-				gpio_WritePin(&_IN3,RESET);
-				gpio_WritePin(&_IN4,SET);
-				teclado = 0;
+//		if (teclado != '\0') {
+//			if (teclado == 'x'){
+//				_Duty -= 200;
+//				_Duty2 -= 200;
+//				if (_Duty < 650 || _Duty2 < 650){
+//					_Duty = 650;
+//					_Duty2 = 650;
+//
+//				}
+//				sprintf(buffer_info, "Dutty =%u \n",(unsigned int)_Duty);
+//				usart_writeMsg(&usart, buffer_info);
+//				teclado = 0;
+//
+//			}
+//			if (teclado == 'z'){
+//				_Duty += 200;
+//				_Duty2 += 200;
+//				if (_Duty > 1000 || _Duty2 > 1000){
+//					_Duty = 1000;
+//					_Duty2 = 1000;
+//				}
+//				sprintf(buffer_info, "Dutty =%u \n",(unsigned int)_Duty);
+//				usart_writeMsg(&usart, buffer_info);
+//				teclado = 0;
+//
+//			}
+//			actualiza_Ciclo_Duty(&_PWM_ENB, _Duty2);
+//			actualiza_Ciclo_Duty(&_PWM_ENA, _Duty);
+//
+//			if (teclado == 'g') {
+//				usart_writeMsg(&usart,"360 a la Izquierda\n\r");
+//				gpio_WritePin(&_IN1,SET);
+//				gpio_WritePin(&_IN2,RESET);
+//				gpio_WritePin(&_IN3,RESET);
+//				gpio_WritePin(&_IN4,SET);
+//				teclado = 0;
+//			}
+//			if (teclado == 'h') {
+//				usart_writeMsg(&usart,"360 a la derecha\n\r");
+//				gpio_WritePin(&_IN1,RESET);
+//				gpio_WritePin(&_IN2,SET);
+//				gpio_WritePin(&_IN3,SET);
+//				gpio_WritePin(&_IN4,RESET);
+//				teclado = 0;
+//			}
+
+//			if (teclado == 'r') {
+//				usart_writeMsg(&usart,"Funciona\n\r");
+//				teclado = 0;
+//			}
+//		}
+		if (flag_boton ==  0){
+			/*Quieto*/
+			if (Lectura_ejeY > 1800 && Lectura_ejeY < 2300 && Lectura_ejeX > 1800 && Lectura_ejeX < 2300) {
+				gpio_WritePin(&_IN1, RESET);
+				gpio_WritePin(&_IN2, RESET);
+				gpio_WritePin(&_IN3, RESET);
+				gpio_WritePin(&_IN4, RESET);
+
 			}
-			/*Si se presiona la letra "b"*/
-			else if (teclado == 's') {
-				usart_writeMsg(&usart,"Atrás\n\r");
-				gpio_WritePin(&_IN1,SET);
-				gpio_WritePin(&_IN2,RESET);
-				gpio_WritePin(&_IN3,SET);
-				gpio_WritePin(&_IN4,RESET);
-				teclado = 0;
+			/*adelante*/
+			else if (Lectura_ejeY < 300) {
+
+				gpio_WritePin(&_IN1, RESET);
+				gpio_WritePin(&_IN2, SET);
+				gpio_WritePin(&_IN3, RESET);
+				gpio_WritePin(&_IN4, SET);
+
+			}
+			/*atras*/
+			else if (Lectura_ejeY > 3700) {
+
+				gpio_WritePin(&_IN1, SET);
+				gpio_WritePin(&_IN2, RESET);
+				gpio_WritePin(&_IN3, SET);
+				gpio_WritePin(&_IN4, RESET);
+
+			}
+			/*derecha*/
+			else if (Lectura_ejeX < 300) {
+
+				gpio_WritePin(&_IN1, RESET);
+				gpio_WritePin(&_IN2, SET);
+				gpio_WritePin(&_IN3, RESET);
+				gpio_WritePin(&_IN4, RESET);
+
+			}
+			/*izquierda*/
+			else if (Lectura_ejeX > 3700) {
+
+				gpio_WritePin(&_IN1, RESET);
+				gpio_WritePin(&_IN2, RESET);
+				gpio_WritePin(&_IN3, RESET);
+				gpio_WritePin(&_IN4, SET);
+
 			}
 
-			else if (teclado == 'a') {
-				usart_writeMsg(&usart,"Izquierda\n\r");
-				gpio_WritePin(&_IN1,RESET);
-				gpio_WritePin(&_IN2,RESET);
-				gpio_WritePin(&_IN3,RESET);
-				gpio_WritePin(&_IN4,SET);
-				teclado = 0;
-			}
-			/*Si se presiona la letra "b"*/
-			else if (teclado == 'd') {
-				usart_writeMsg(&usart,"Derecha\n\r");
-				gpio_WritePin(&_IN1,RESET);
-				gpio_WritePin(&_IN2,SET);
-				gpio_WritePin(&_IN3,RESET);
-				gpio_WritePin(&_IN4,RESET);
-				teclado = 0;
-			}
-			else if (teclado == 'g') {
-				usart_writeMsg(&usart,"360 a la Izquierda\n\r");
-				gpio_WritePin(&_IN1,SET);
-				gpio_WritePin(&_IN2,RESET);
-				gpio_WritePin(&_IN3,RESET);
-				gpio_WritePin(&_IN4,SET);
-				teclado = 0;
-			}
-			else if (teclado == 'h') {
-				usart_writeMsg(&usart,"360 a la derecha\n\r");
-				gpio_WritePin(&_IN1,RESET);
-				gpio_WritePin(&_IN2,SET);
-				gpio_WritePin(&_IN3,SET);
-				gpio_WritePin(&_IN4,RESET);
-				teclado = 0;
-			}
-			else if (teclado == 'o') {
-				usart_writeMsg(&usart,"APAGA\n\r");
-				gpio_WritePin(&_IN1,RESET);
-				gpio_WritePin(&_IN2,RESET);
-				gpio_WritePin(&_IN3,RESET);
-				gpio_WritePin(&_IN4,RESET);
-				teclado = 0;
-			}
-			else if (teclado == 'r') {
-				usart_writeMsg(&usart,"Funciona\n\r");
-				teclado = 0;
-			}
-			/*Si se presiona la letra "c"**/
 		}
+		else {
+			gpio_WritePin(&_IN1, RESET);
+			gpio_WritePin(&_IN2, RESET);
+			gpio_WritePin(&_IN3, RESET);
+			gpio_WritePin(&_IN4, SET);
+//			if (teclado == 'g') {
+//				usart_writeMsg(&usart, "360 a la Izquierda\n\r");
+//				gpio_WritePin(&_IN1, SET);
+//				gpio_WritePin(&_IN2, RESET);
+//				gpio_WritePin(&_IN3, RESET);
+//				gpio_WritePin(&_IN4, SET);
+//				teclado = 0;
+//			}
+//			if (teclado == 'h') {
+//				usart_writeMsg(&usart, "360 a la derecha\n\r");
+//				gpio_WritePin(&_IN1, RESET);
+//				gpio_WritePin(&_IN2, SET);
+//				gpio_WritePin(&_IN3, SET);
+//				gpio_WritePin(&_IN4, RESET);
+//				teclado = 0;
+//			}
+
+		}
+
 	}
 }
 /*******************************************************************************************************************************************/
 void start(void) {
+	/*Configuracion del _SW_cambiaPWM
+	 Boton usado para cambiar el sentido del contador */
+	_SW_cambiaPWM.pGPIOx = GPIOA;
+	_SW_cambiaPWM.pinConfig.GPIO_PinNumber = PIN_1;
+	_SW_cambiaPWM.pinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	_SW_cambiaPWM.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	_SW_cambiaPWM.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	_SW_cambiaPWM.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+
+	_Exti1Botton.pGPIOHandler = &_SW_cambiaPWM;
+	_Exti1Botton.edgeType = EXTERNAL_INTERRUPT_FALLING_EDGE;
+	exti_Config(&_Exti1Botton);
 	/*Se configura el led rojo del blinky*/
 //	led_Blinky.pGPIOx = GPIOB;
 //	led_Blinky.pinConfig.GPIO_PinNumber = PIN_10;
@@ -214,7 +263,7 @@ void start(void) {
 	_PWM_ENB.config.Canal = PWM_CHANNEL_2;
 	_PWM_ENB.config.prescaler = 16;
 	_PWM_ENB.config.periodo = 1000;
-	_PWM_ENB.config.CicloDuty = 500;
+	_PWM_ENB.config.CicloDuty = 800;
 	configuracion_del_pwm(&_PWM_ENB);
 	activar_salida(&_PWM_ENB);
 	inicio_de_señal_pwm(&_PWM_ENB);
@@ -268,13 +317,43 @@ void start(void) {
 	_PWM_ENA.config.Canal = PWM_CHANNEL_1;
 	_PWM_ENA.config.prescaler = 16;
 	_PWM_ENA.config.periodo = 1000;
-	_PWM_ENA.config.CicloDuty = 500;
+	_PWM_ENA.config.CicloDuty = 800;
 	configuracion_del_pwm(&_PWM_ENA);
 	activar_salida(&_PWM_ENA);
 	inicio_de_señal_pwm(&_PWM_ENA);
+	/*El sensor 1 siendo el primero de la secuencia*/
+	ejeX.channel = CHANNEL_9;
+	ejeX.resolution = RESOLUTION_12_BIT;
+	ejeX.dataAlignment = ALIGNMENT_RIGHT;
+	ejeX.samplingPeriod = SAMPLING_PERIOD_112_CYCLES;
+	ejeX.interrupState = ADC_INT_ENABLE;
+	/*El sensor 2 siendo el segundo de la secuencia*/
+	ejeY.channel = CHANNEL_8;
+	ejeY.resolution = RESOLUTION_12_BIT;
+	ejeY.dataAlignment = ALIGNMENT_RIGHT;
+	ejeY.samplingPeriod = SAMPLING_PERIOD_112_CYCLES;
+	ejeY.interrupState = ADC_INT_ENABLE;
+
+//	arreglo_ejes[0] = ejeX;
+//	arreglo_ejes[1] = ejeY;
+//
+//	/*Ahora que se cargue la configuracion de todos los sensores*/
+//	adc_ConfigMultichannel (arreglo_ejes,CANTIDAD_DE_SENSORES);
+//	/*Se configura el PWM que va a ayudar a muestrear la señal */
+//	_PWM_Muestreo.pTIMx = TIM4;
+//	_PWM_Muestreo.config.Canal = PWM_CHANNEL_4;
+//	_PWM_Muestreo.config.prescaler = 16;
+//	_PWM_Muestreo.config.periodo = 25;
+//	_PWM_Muestreo.config.CicloDuty = 2;
+//	configuracion_del_pwm(&_PWM_Muestreo);
+//	inicio_de_señal_pwm(&_PWM_Muestreo);
+//	inicio_de_señal_pwm(&_PWM_Muestreo);
+//	/*Se configura el trigger externo con PWM*/
+//	adc_ConfigTrigger (TRIGGER_EXT, &_PWM_Muestreo);
 
 
 }
+
 /*******************************************************************************************************************************************/
 
 /*Con esta funcion de interrupcion se cambia el estado del led dependiendo del ARR*/
@@ -285,8 +364,24 @@ void Timer9_Callback(void) {
 void usart2_RxCallback(void) {
 	teclado = usart_getRxData();
 }
+
+void callback_extInt1(void) {
+	flag_boton ^= 1;
+}
 /*Esta funcion se activa por cada conversion segun la secuencia*/
 void adc_CompleteCallback(void) {
-	__NOP();
+//	arreglo_ejes[_Contador_Secuencia].adcData = adc_GetValue();
+//	if (_Contador_Secuencia == 0){
+//		Lectura_ejeX = arreglo_ejes[0].adcData;
+//	}
+//	else if (_Contador_Secuencia == 1){
+//		Lectura_ejeY = arreglo_ejes[1].adcData;
+//	}
+//	_Contador_Secuencia++;
+//	/*Se evalua si la secuencia ha llegado a 3, el cual es el numero de canales*/
+//	if (_Contador_Secuencia >=CANTIDAD_DE_SENSORES){
+//		/*Se reinicia el contador para estar al ritmo de la secuencia de conversion ADC*/
+//		_Contador_Secuencia = 0;
+//	}
 }
 /*FINISH*//*********************************************************************************************************************************/
