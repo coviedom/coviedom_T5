@@ -19,11 +19,16 @@ GPIO_Handler_t userLed = { 0 };   //PIN A5
 Timer_Handler_t blinkTimer = { 0 };
 //comunicacion RS-232 con el PC, ya habilitada en la board Nucleo
 //Utiliza la conexion USB
-USART_Handler_t commSerial = { 0 };
+USART_Handler_t receptor = { 0 };
 GPIO_Handler_t pinTx = { 0 };
 GPIO_Handler_t pinRx = { 0 };
 uint8_t sendMsg = 0;
 uint8_t RxData = 0;
+
+USART_Handler_t coolterm = { 0 };
+GPIO_Handler_t transmcool = { 0 };
+
+
 char bufferData[64] = { 0 };
 
 //Definicion de las caberas de las funciones del main
@@ -38,18 +43,23 @@ int main(void) {
 
 	//Ciclo principal
 	while (1) {
-		if (sendMsg) {
-			sendMsg = 0;
-			usart_WriteChar(&commSerial,'d');
-		}
-//		if(RxData != '\0') {
-//			if (RxData == 'd') {
-//				gpio_TooglePin(&userLed);
-//				sendMsg = 1;
-//			}
-//			RxData = 0;
-//
+//		if (sendMsg) {
+//			sendMsg = 0;
+//			sprintf(bufferData, "El Usart Funciona Bien!! %d \n\r", 700);
+//			usart_writeMsg(&receptor, bufferData);
 //		}
+		if(RxData != '\0') {
+			if (RxData == 'd' ) {
+//				sprintf(bufferData, "El Usart Funciona Bien!! %d \n\r",700);
+//				usart_writeMsg(&coolterm, bufferData);
+				gpio_TooglePin(&userLed);
+
+//				RxData = 0;
+//				sendMsg = 1;
+			}
+			RxData = 0;
+
+		}
 
 	}
 
@@ -58,8 +68,8 @@ int main(void) {
 void initSystem(void) {
 
 	/* Configuramos el pin*/
-	userLed.pGPIOx = GPIOB;
-	userLed.pinConfig.GPIO_PinNumber = PIN_10;
+	userLed.pGPIOx = GPIOA;
+	userLed.pinConfig.GPIO_PinNumber = PIN_5;
 	userLed.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	userLed.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	userLed.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_MEDIUM;
@@ -80,7 +90,7 @@ void initSystem(void) {
 	timer_SetState(&blinkTimer, TIMER_ON);
 
 	//configuramos los pines del puerto serial
-	//Pin sobre los que funciona el USART2 (TX)
+//	//Pin sobre los que funciona el USART2 (TX)
 	pinTx.pGPIOx = GPIOA;
 	pinTx.pinConfig.GPIO_PinNumber = PIN_11;
 	pinTx.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
@@ -96,48 +106,44 @@ void initSystem(void) {
 	pinRx.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	pinRx.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	gpio_Config(&pinRx);
-//	//Configuramos el puerto serial (USART2)
-	commSerial.ptrUSARTx = USART6;
-	commSerial.USART_Config.baudrate = USART_BAUDRATE_9600;
-	commSerial.USART_Config.datasize = USART_DATASIZE_8BIT;
-	commSerial.USART_Config.parity = USART_PARITY_NONE;
-	commSerial.USART_Config.stopbits = USART_STOPBIT_1;
-	commSerial.USART_Config.mode = USART_MODE_RXTX;
-	commSerial.USART_Config.enableIntRX = USART_RX_INTERRUP_ENABLE;
-	usart_Config(&commSerial);
+	//Configuramos el puerto serial (USART2)
+	receptor.ptrUSARTx = USART6;
+	receptor.USART_Config.baudrate = USART_BAUDRATE_9600;
+	receptor.USART_Config.datasize = USART_DATASIZE_8BIT;
+	receptor.USART_Config.parity = USART_PARITY_NONE;
+	receptor.USART_Config.stopbits = USART_STOPBIT_1;
+	receptor.USART_Config.mode = USART_MODE_RXTX;
+	receptor.USART_Config.enableIntRX = USART_RX_INTERRUP_ENABLE;
+	usart_Config(&receptor);
 
-//	pinTx.pGPIOx = GPIOA;
-//	pinTx.pinConfig.GPIO_PinNumber = PIN_2;
-//	pinTx.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
-//	pinTx.pinConfig.GPIO_PinAltFunMode = AF7;
-//	pinTx.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-//	pinTx.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-//	gpio_Config(&pinTx);
+	//configuramos los pines del puerto serial
+	//Pin sobre los que funciona el USART2 (TX)
+//	transmcool.pGPIOx = GPIOA;
+//	transmcool.pinConfig.GPIO_PinNumber = PIN_2;
+//	transmcool.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
+//	transmcool.pinConfig.GPIO_PinAltFunMode = AF7;
+//	transmcool.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+//	transmcool.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+//	gpio_Config(&transmcool);
 //	//Pin sobre los que funciona el USART2 (RX)
-//	pinRx.pGPIOx = GPIOA;
-//	pinRx.pinConfig.GPIO_PinNumber = PIN_3;
-//	pinRx.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
-//	pinRx.pinConfig.GPIO_PinAltFunMode = AF7;
-//	pinRx.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-//	pinRx.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-//	gpio_Config(&pinRx);
-////	//Configuramos el puerto serial (USART2)
-//	commSerial.ptrUSARTx = USART2;
-//	commSerial.USART_Config.baudrate = USART_BAUDRATE_9600;
-//	commSerial.USART_Config.datasize = USART_DATASIZE_8BIT;
-//	commSerial.USART_Config.parity = USART_PARITY_NONE;
-//	commSerial.USART_Config.stopbits = USART_STOPBIT_1;
-//	commSerial.USART_Config.mode = USART_MODE_RXTX;
-//	commSerial.USART_Config.enableIntRX = USART_RX_INTERRUP_ENABLE;
-//	usart_Config(&commSerial);
+//
+//	//Configuramos el puerto serial (USART2)
+//	coolterm.ptrUSARTx = USART2;
+//	coolterm.USART_Config.baudrate = USART_BAUDRATE_9600;
+//	coolterm.USART_Config.datasize = USART_DATASIZE_8BIT;
+//	coolterm.USART_Config.parity = USART_PARITY_NONE;
+//	coolterm.USART_Config.stopbits = USART_STOPBIT_1;
+//	coolterm.USART_Config.mode = USART_MODE_RXTX;
+//	coolterm.USART_Config.enableIntRX = USART_RX_INTERRUP_ENABLE;
+//	usart_Config(&coolterm);
 
 }
 
 //Overwrite function
 
 void Timer2_Callback(void) {
-	gpio_TooglePin(&userLed);
-	sendMsg = 1;
+//	gpio_TooglePin(&userLed);
+
 
 }
 
@@ -155,3 +161,11 @@ void assert_failed(uint8_t *file, uint32_t line) {
 		// problemas...
 	}
 }
+/*
+ * receptor.c
+ *
+ *  Created on: 1/12/2023
+ *      Author: ingfisica
+ */
+
+

@@ -9,7 +9,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stm32f4xx.h>
-#include <math.h>
 #include <stdbool.h>
 #include "stm32_assert.h"
 #include "gpio_driver_hal.h"
@@ -18,7 +17,7 @@
 #include "exti_driver_hal.h"
 #include "pwm_driver_hal.h"
 #include "timer_driver_hal.h"
-#include "arm_math.h"
+
 /*******************************************************************************************************************************************/
 #define CANTIDAD_DE_SENSORES 2
 /*Se encabeza la funcion a utilizar en el programa*/
@@ -59,21 +58,66 @@ uint8_t flag_boton = 0;
 EXTI_Config_t _Exti1Botton = {0};
 GPIO_Handler_t _SW_cambiaPWM = {0};	//PIN A1
 
-/*Pines para el RGB*/
-GPIO_Handler_t RGB_rojo = {0};
-GPIO_Handler_t RGB_verde  = {0};
-GPIO_Handler_t RGB_azul  = {0};
-
-
-
 int main(void) {
 	/*Se activa el co-procesador FPU*/
 //	SCB->CPACR |= (0xF << 20);
 	/*funcion que se encarga de configurar las definiciones antes mencionadas*/
 	start();
-
 	/*Lo que realiza el codigo ciclicamente*/
 	while (1) {
+
+
+//		if (teclado != '\0') {
+//			if (teclado == 'x'){
+//				_Duty -= 200;
+//				_Duty2 -= 200;
+//				if (_Duty < 650 || _Duty2 < 650){
+//					_Duty = 650;
+//					_Duty2 = 650;
+//
+//				}
+//				sprintf(buffer_info, "Dutty =%u \n",(unsigned int)_Duty);
+//				usart_writeMsg(&usart, buffer_info);
+//				teclado = 0;
+//
+//			}
+//			if (teclado == 'z'){
+//				_Duty += 200;
+//				_Duty2 += 200;
+//				if (_Duty > 1000 || _Duty2 > 1000){
+//					_Duty = 1000;
+//					_Duty2 = 1000;
+//				}
+//				sprintf(buffer_info, "Dutty =%u \n",(unsigned int)_Duty);
+//				usart_writeMsg(&usart, buffer_info);
+//				teclado = 0;
+//
+//			}
+//			actualiza_Ciclo_Duty(&_PWM_ENB, _Duty2);
+//			actualiza_Ciclo_Duty(&_PWM_ENA, _Duty);
+//
+//			if (teclado == 'g') {
+//				usart_writeMsg(&usart,"360 a la Izquierda\n\r");
+//				gpio_WritePin(&_IN1,SET);
+//				gpio_WritePin(&_IN2,RESET);
+//				gpio_WritePin(&_IN3,RESET);
+//				gpio_WritePin(&_IN4,SET);
+//				teclado = 0;
+//			}
+//			if (teclado == 'h') {
+//				usart_writeMsg(&usart,"360 a la derecha\n\r");
+//				gpio_WritePin(&_IN1,RESET);
+//				gpio_WritePin(&_IN2,SET);
+//				gpio_WritePin(&_IN3,SET);
+//				gpio_WritePin(&_IN4,RESET);
+//				teclado = 0;
+//			}
+
+//			if (teclado == 'r') {
+//				usart_writeMsg(&usart,"Funciona\n\r");
+//				teclado = 0;
+//			}
+//		}
 //		if (flag_boton ==  0){
 			/*Quieto*/
 			if (Lectura_ejeY > 1800 && Lectura_ejeY < 2300 && Lectura_ejeX > 1800 && Lectura_ejeX < 2300) {
@@ -123,9 +167,9 @@ int main(void) {
 //		}
 //		else {
 //			gpio_WritePin(&_IN1, RESET);
-//			gpio_WritePin(&_IN2, SET);
-//			gpio_WritePin(&_IN3, SET);
-//			gpio_WritePin(&_IN4, RESET);
+//			gpio_WritePin(&_IN2, RESET);
+//			gpio_WritePin(&_IN3, RESET);
+//			gpio_WritePin(&_IN4, SET);
 //			if (teclado == 'g') {
 //				usart_writeMsg(&usart, "360 a la Izquierda\n\r");
 //				gpio_WritePin(&_IN1, SET);
@@ -159,11 +203,11 @@ void start(void) {
 	_SW_cambiaPWM.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 
 	_Exti1Botton.pGPIOHandler = &_SW_cambiaPWM;
-	_Exti1Botton.edgeType = EXTERNAL_INTERRUPT_RISING_FALLING_EDGE;
+	_Exti1Botton.edgeType = EXTERNAL_INTERRUPT_FALLING_EDGE;
 	exti_Config(&_Exti1Botton);
 	/*Se configura el led rojo del blinky*/
-	led_Blinky.pGPIOx = GPIOB;
-	led_Blinky.pinConfig.GPIO_PinNumber = PIN_10;
+	led_Blinky.pGPIOx = GPIOA;
+	led_Blinky.pinConfig.GPIO_PinNumber = PIN_5;
 	led_Blinky.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	led_Blinky.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	led_Blinky.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
@@ -218,7 +262,7 @@ void start(void) {
 	_PWM_ENB.config.Canal = PWM_CHANNEL_2;
 	_PWM_ENB.config.prescaler = 16;
 	_PWM_ENB.config.periodo = 1000;
-	_PWM_ENB.config.CicloDuty = 1000;
+	_PWM_ENB.config.CicloDuty = 800;
 	configuracion_del_pwm(&_PWM_ENB);
 	activar_salida(&_PWM_ENB);
 	inicio_de_señal_pwm(&_PWM_ENB);
@@ -259,20 +303,20 @@ void start(void) {
 	_IN1.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	gpio_Config(&_IN1);
 	gpio_WritePin(&_IN1,RESET);
-
-	_ENA.pGPIOx = GPIOA;
-	_ENA.pinConfig.GPIO_PinNumber = PIN_5;
-   _ENA.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
-	_ENA.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	_ENA.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	_ENA.pinConfig.GPIO_PinAltFunMode = AF1;
-	gpio_Config(&_ENA);
+//
+//	_ENA.pGPIOx = GPIOA;
+//	_ENA.pinConfig.GPIO_PinNumber = PIN_5;
+//    _ENA.pinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
+//	_ENA.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+//	_ENA.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+//	_ENA.pinConfig.GPIO_PinAltFunMode = AF1;
+//	gpio_Config(&_ENA);
 
 	_PWM_ENA.pTIMx = TIM2;
 	_PWM_ENA.config.Canal = PWM_CHANNEL_1;
 	_PWM_ENA.config.prescaler = 16;
 	_PWM_ENA.config.periodo = 1000;
-	_PWM_ENA.config.CicloDuty = 1000;
+	_PWM_ENA.config.CicloDuty = 800;
 	configuracion_del_pwm(&_PWM_ENA);
 	activar_salida(&_PWM_ENA);
 	inicio_de_señal_pwm(&_PWM_ENA);
@@ -306,30 +350,6 @@ void start(void) {
 	/*Se configura el trigger externo con PWM*/
 	adc_ConfigTrigger (TRIGGER_EXT, &_PWM_Muestreo);
 
-	RGB_rojo.pGPIOx = GPIOB;
-	RGB_rojo.pinConfig.GPIO_PinNumber = PIN_10;
-	RGB_rojo.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	RGB_rojo.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	RGB_rojo.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	RGB_rojo.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	gpio_Config(&RGB_rojo);
-
-	RGB_verde.pGPIOx = GPIOB;
-	RGB_verde.pinConfig.GPIO_PinNumber = PIN_10;
-	RGB_verde.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	RGB_verde.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	RGB_verde.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	RGB_verde.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	gpio_Config(&RGB_verde);
-
-	RGB_azul.pGPIOx = GPIOB;
-	RGB_azul.pinConfig.GPIO_PinNumber = PIN_10;
-	RGB_azul.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
-	RGB_azul.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
-	RGB_azul.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
-	RGB_azul.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
-	gpio_Config(&RGB_azul);
-
 
 }
 
@@ -345,7 +365,7 @@ void usart2_RxCallback(void) {
 }
 
 void callback_extInt1(void) {
-	flag_boton ^= 1;
+//	flag_boton ^= 1;
 }
 /*Esta funcion se activa por cada conversion segun la secuencia*/
 void adc_CompleteCallback(void) {
