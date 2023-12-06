@@ -20,13 +20,13 @@
 #include "timer_driver_hal.h"
 #include "arm_math.h"
 /*******************************************************************************************************************************************/
-#define CANTIDAD_DE_SENSORES 2
+#define CANTIDAD_DE_SENSORES 3
 /*Se encabeza la funcion a utilizar en el programa*/
 void start(void);
 /*Se define el Led rojo del blinky*/
 GPIO_Handler_t led_Blinky = {0};         //PB10
 /*Se define el timer a utilizar*/
-//Timer_Handler_t timer_del_Blinky = {0};
+Timer_Handler_t timer_del_Blinky = {0};
 /*Se define el Usart y sus respectivos pines*/
 USART_Handler_t emisor = { 0 };
 GPIO_Handler_t pinTx = { 0 };
@@ -51,8 +51,10 @@ PWM_Handler_t _PWM_Muestreo = {0};
 ADC_Config_t arreglo_ejes[CANTIDAD_DE_SENSORES]= {0};
 ADC_Config_t ejeX = {0};
 ADC_Config_t ejeY = {0};
+ADC_Config_t ejeYP = {0};
 uint16_t Lectura_ejeX = 0;
 uint16_t Lectura_ejeY = 0;
+uint16_t Lectura_ejeYP = 0;
 uint8_t _Contador_Secuencia = 0; /*Contador de la secuencia de conversion*/
 
 uint8_t flag_boton = 0;
@@ -68,8 +70,8 @@ uint8_t sendMsg = 0;
 
 
 int main(void) {
-	/*Se activa el co-procesador FPU*/
-//	SCB->CPACR |= (0xF << 20);
+
+
 	/*funcion que se encarga de configurar las definiciones antes mencionadas*/
 	start();
 
@@ -79,10 +81,18 @@ int main(void) {
 
 		if (flag_boton ==  0){
 
-//		if (sendMsg) {
-//			sendMsg = 0;
-//			usart_WriteChar(&emisor,'j');
-//		}
+			if (Lectura_ejeYP > 1800 && Lectura_ejeYP < 2300) {
+				usart_WriteChar(&emisor,'m');
+			}
+//			/*adelante*/
+	        if (Lectura_ejeYP < 300) {
+				usart_WriteChar(&emisor,'h');
+			}
+			/*atras*/
+			if (Lectura_ejeYP > 3700) {
+				usart_WriteChar(&emisor,'l');
+			}
+
 				/*Quieto*/
 			if (Lectura_ejeY > 1800 && Lectura_ejeY < 2300 && Lectura_ejeX > 1800 && Lectura_ejeX < 2300) {
 				usart_WriteChar(&emisor,'q');
@@ -103,14 +113,7 @@ int main(void) {
 			else if (Lectura_ejeX > 3700) {
 				usart_WriteChar(&emisor,'i');
 			}
-//			else {
-//				usart_WriteChar(&emisor,'u');
-//
-//			}
 
-//			RxData = 0;
-//			}
-//		}
 
 		}
 		else {
@@ -125,8 +128,8 @@ int main(void) {
 void start(void) {
 	/*Configuracion del _SW_cambiaPWM
 	 Boton usado para cambiar el sentido del contador */
-	_SW_cambiaPWM.pGPIOx = GPIOA;
-	_SW_cambiaPWM.pinConfig.GPIO_PinNumber = PIN_1;
+	_SW_cambiaPWM.pGPIOx = GPIOB;
+	_SW_cambiaPWM.pinConfig.GPIO_PinNumber = PIN_9;
 	_SW_cambiaPWM.pinConfig.GPIO_PinMode = GPIO_MODE_IN;
 	_SW_cambiaPWM.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	_SW_cambiaPWM.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
@@ -145,14 +148,14 @@ void start(void) {
 	gpio_Config(&led_Blinky);
 	gpio_WritePin(&led_Blinky, SET);
 	/*Se configura el timer para el blinky*/
-//	timer_del_Blinky.pTIMx = TIM9;
-//	timer_del_Blinky.TIMx_Config.TIMx_Prescaler = 16000;
-//	timer_del_Blinky.TIMx_Config.TIMx_Period = 250;
-//	timer_del_Blinky.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
-//	timer_del_Blinky.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
-//	timer_Config(&timer_del_Blinky);
-//	/*Que el timer esté encendido*/
-//	timer_SetState(&timer_del_Blinky, TIMER_ON);
+	timer_del_Blinky.pTIMx = TIM9;
+	timer_del_Blinky.TIMx_Config.TIMx_Prescaler = 16000;
+	timer_del_Blinky.TIMx_Config.TIMx_Period = 250;
+	timer_del_Blinky.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
+	timer_del_Blinky.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
+	timer_Config(&timer_del_Blinky);
+	/*Que el timer esté encendido*/
+	timer_SetState(&timer_del_Blinky, TIMER_ON);
 	/*Se configura el usart de comunicacion serial*/
 	pinTx.pGPIOx = GPIOA;
 	pinTx.pinConfig.GPIO_PinNumber = PIN_11;
@@ -250,20 +253,28 @@ void start(void) {
 	activar_salida(&_PWM_ENA);
 	inicio_de_señal_pwm(&_PWM_ENA);
 	/*El sensor 1 siendo el primero de la secuencia*/
-	ejeX.channel = CHANNEL_10;
+	ejeX.channel = CHANNEL_7;
 	ejeX.resolution = RESOLUTION_12_BIT;
 	ejeX.dataAlignment = ALIGNMENT_RIGHT;
 	ejeX.samplingPeriod = SAMPLING_PERIOD_112_CYCLES;
 	ejeX.interrupState = ADC_INT_ENABLE;
 	/*El sensor 2 siendo el segundo de la secuencia*/
-	ejeY.channel = CHANNEL_8;
+	ejeY.channel = CHANNEL_6;
 	ejeY.resolution = RESOLUTION_12_BIT;
 	ejeY.dataAlignment = ALIGNMENT_RIGHT;
 	ejeY.samplingPeriod = SAMPLING_PERIOD_112_CYCLES;
 	ejeY.interrupState = ADC_INT_ENABLE;
 
+	/*El sensor 2 siendo el segundo de la secuencia*/
+	ejeYP.channel = CHANNEL_14;
+	ejeYP.resolution = RESOLUTION_12_BIT;
+	ejeYP.dataAlignment = ALIGNMENT_RIGHT;
+	ejeYP.samplingPeriod = SAMPLING_PERIOD_112_CYCLES;
+	ejeYP.interrupState = ADC_INT_ENABLE;
+
 	arreglo_ejes[0] = ejeX;
 	arreglo_ejes[1] = ejeY;
+	arreglo_ejes[2] = ejeYP;
 
 	/*Ahora que se cargue la configuracion de todos los sensores*/
 	adc_ConfigMultichannel (arreglo_ejes,CANTIDAD_DE_SENSORES);
@@ -310,10 +321,10 @@ void start(void) {
 /*******************************************************************************************************************************************/
 
 /*Con esta funcion de interrupcion se cambia el estado del led dependiendo del ARR*/
-//void Timer9_Callback(void) {
-//	gpio_TooglePin(&led_Blinky);
-////	sendMsg = 1;
-//}
+void Timer9_Callback(void) {
+	gpio_TooglePin(&led_Blinky);
+//	sendMsg = 1;
+}
 /*Funcion que si se recibe algo por comunicacion serial almacena la informacion en la variable teclado*/
 void usart6_RxCallback(void){
 	//leemos el valor del registro DR, donde se almacena el dato que llega.
@@ -322,7 +333,7 @@ void usart6_RxCallback(void){
 
 }
 
-void callback_extInt1(void) {
+void callback_extInt9(void) {
 	flag_boton ^= 1;
 }
 /*Esta funcion se activa por cada conversion segun la secuencia*/
@@ -333,6 +344,9 @@ void adc_CompleteCallback(void) {
 	}
 	else if (_Contador_Secuencia == 1){
 		Lectura_ejeY = arreglo_ejes[1].adcData;
+	}
+	else if (_Contador_Secuencia == 2){
+		Lectura_ejeYP = arreglo_ejes[2].adcData;
 	}
 	_Contador_Secuencia++;
 	/*Se evalua si la secuencia ha llegado a 3, el cual es el numero de canales*/
