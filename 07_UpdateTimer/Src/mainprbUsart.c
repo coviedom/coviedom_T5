@@ -58,8 +58,8 @@ int main(void) {
 void initSystem(void) {
 
 	/* Configuramos el pin*/
-	userLed.pGPIOx = GPIOB;
-	userLed.pinConfig.GPIO_PinNumber = PIN_10;
+	userLed.pGPIOx = GPIOC;
+	userLed.pinConfig.GPIO_PinNumber = PIN_1;
 	userLed.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	userLed.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	userLed.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_MEDIUM;
@@ -71,7 +71,7 @@ void initSystem(void) {
 	//Configuracion del TIM2
 	blinkTimer.pTIMx = TIM2;
 	blinkTimer.TIMx_Config.TIMx_Prescaler = 16000; // Genera incrementos de 1 ms
-	blinkTimer.TIMx_Config.TIMx_Period = 1000; // De la mano con el prescaler
+	blinkTimer.TIMx_Config.TIMx_Period = 250; // De la mano con el prescaler
 	blinkTimer.TIMx_Config.TIMx_mode = TIMER_UP_COUNTER;
 	blinkTimer.TIMx_Config.TIMx_InterruptEnable = TIMER_INT_ENABLE;
 	// configuramos el timer
