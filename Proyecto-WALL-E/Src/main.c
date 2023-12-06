@@ -59,6 +59,8 @@ uint8_t flag_boton = 0;
 EXTI_Config_t _Exti1Botton = {0};
 GPIO_Handler_t _SW_cambiaPWM = {0};	//PIN A1
 
+GPIO_Handler_t infrarojo_delantero = {0};
+
 ///*Pines para el RGB*/
 //GPIO_Handler_t RGB_rojo = {0};
 //GPIO_Handler_t RGB_verde  = {0};
@@ -85,8 +87,21 @@ int main(void) {
 ////				teclado = 0;
 ////				sendMsg = 1;
 //			}
+		uint32_t read1 = gpio_ReadPin(&infrarojo_delantero);
+		/*Entonces si está en 1 es por que esta encendido el de las resoluciones ya que es de catodo comun*/
+//		if (read1 == RESET) {
+//			gpio_WritePin(&userLed, SET);
+//		}
+//		else {
+//			gpio_WritePin(&userLed, RESET);
+//		}
+
+		if (read1 == SET) {
+			gpio_WritePin(&led_Blinky,RESET);
+
 
 			while (teclado == 'q' ) {
+
 				/*Quieto*/
 				gpio_WritePin(&_IN1, RESET);
 				gpio_WritePin(&_IN2, RESET);
@@ -96,57 +111,69 @@ int main(void) {
 
 
 			}
-			 while  (teclado == 'a' ) {
+			while(teclado == 'a' ) {
 			/*adelante*/
+				gpio_ReadPin(&infrarojo_delantero);
 				gpio_WritePin(&_IN1, RESET);
 				gpio_WritePin(&_IN2, SET);
 				gpio_WritePin(&_IN3, RESET);
 				gpio_WritePin(&_IN4, SET);
 				teclado = 0;
 
+
+
+
 			}
 //
 //
 //
 //
-			while(teclado == 't' ) {
+			while (teclado == 't' ) {
 			/*atras*/
 				gpio_WritePin(&_IN1, SET);
 				gpio_WritePin(&_IN2, RESET);
 				gpio_WritePin(&_IN3, SET);
 				gpio_WritePin(&_IN4, RESET);
 				teclado = 0;
+				gpio_ReadPin(&infrarojo_delantero);
+
 
 
 			}
-			while (teclado == 'd' ) {
+			while(teclado == 'd' ) {
 			/*derecha*/
 				gpio_WritePin(&_IN1, RESET);
 				gpio_WritePin(&_IN2, SET);
 				gpio_WritePin(&_IN3, RESET);
 				gpio_WritePin(&_IN4, RESET);
 				teclado = 0;
+				gpio_ReadPin(&infrarojo_delantero);
+
 
 
 			}
-			while  (teclado == 'i' ) {
+			while (teclado == 'i' ) {
 			/*izquierda*/
 				gpio_WritePin(&_IN1, RESET);
 				gpio_WritePin(&_IN2, RESET);
 				gpio_WritePin(&_IN3, RESET);
 				gpio_WritePin(&_IN4, SET);
 				teclado = 0;
+				gpio_ReadPin(&infrarojo_delantero);
+
 
 
 			}
 
-			while  (teclado == 'u' ) {
+			while(teclado == 'u' ) {
 			/*izquierda*/
 				gpio_WritePin(&_IN1, RESET);
 				gpio_WritePin(&_IN2, SET);
 				gpio_WritePin(&_IN3, SET);
 				gpio_WritePin(&_IN4, RESET);
 				teclado = 0;
+
+
 
 
 			}
@@ -170,6 +197,15 @@ int main(void) {
 
 
 		}
+		else {
+			gpio_WritePin(&led_Blinky, SET);
+			gpio_WritePin(&_IN1, RESET);
+			gpio_WritePin(&_IN2, RESET);
+			gpio_WritePin(&_IN3, RESET);
+			gpio_WritePin(&_IN4, RESET);
+
+		}
+	}
 
 
 //		if (flag_boton ==  0){
@@ -267,7 +303,7 @@ void start(void) {
 	led_Blinky.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
 	led_Blinky.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	gpio_Config(&led_Blinky);
-	gpio_WritePin(&led_Blinky, SET);
+//	gpio_WritePin(&led_Blinky, SET);
 	/*Se configura el timer para el blinky*/
 //	timer_del_Blinky.pTIMx = TIM9;
 //	timer_del_Blinky.TIMx_Config.TIMx_Prescaler = 16000;
@@ -375,6 +411,15 @@ void start(void) {
 	configuracion_del_pwm(&_PWM_ENA);
 	activar_salida(&_PWM_ENA);
 	inicio_de_señal_pwm(&_PWM_ENA);
+
+	infrarojo_delantero.pGPIOx = GPIOB;
+	infrarojo_delantero.pinConfig.GPIO_PinNumber = PIN_5;
+	infrarojo_delantero.pinConfig.GPIO_PinMode = GPIO_MODE_IN;
+	infrarojo_delantero.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
+	infrarojo_delantero.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_FAST;
+	infrarojo_delantero.pinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	gpio_Config(&infrarojo_delantero);
+
 	/*El sensor 1 siendo el primero de la secuencia*/
 //	ejeX.channel = CHANNEL_10;
 //	ejeX.resolution = RESOLUTION_12_BIT;
