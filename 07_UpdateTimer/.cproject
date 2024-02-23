@@ -83,12 +83,12 @@
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.objcopy.symbolsrec.1923790467" name="MCU Output Converter Motorola S-rec with symbols" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.objcopy.symbolsrec"/>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1595312718.1516046547" name="receptor.c" rcbsApplicability="disable" resourcePath="Src/receptor.c" toolsToInvoke="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.892319265.1245111923">
-						<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.892319265.1245111923" name="MCU GCC Compiler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.892319265"/>
+					<fileInfo id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1595312718.2130530154" name="mainprbUsart.c" rcbsApplicability="disable" resourcePath="Src/mainprbUsart.c" toolsToInvoke="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.892319265.1198666485">
+						<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.892319265.1198666485" name="MCU GCC Compiler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.892319265"/>
 					</fileInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Inc"/>
-						<entry excluding="receptor.c|pruebaProximidad.c|pruebaPwm.c|PruebaJoystick.c|mainpruebaADC.c|pruebaSPI.c|Prueba_I2C.c|prueba_Sysitick.c|sdksl.c|RepasoTaller.c|PruebaTarea3.c|Tarea3.c|mainpruebaadc.c|main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
+						<entry excluding="mainprbUsart.c|receptor.c|pruebaProximidad.c|pruebaPwm.c|PruebaJoystick.c|pruebaSPI.c|Prueba_I2C.c|prueba_Sysitick.c|sdksl.c|RepasoTaller.c|PruebaTarea3.c|Tarea3.c|mainpruebaadc.c|main.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Startup"/>
 					</sourceEntries>
 				</configuration>

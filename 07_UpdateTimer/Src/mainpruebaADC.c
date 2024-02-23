@@ -99,8 +99,8 @@ void initSys(void) {
 /*Configuramos los pines que se van a utilizar*/
 
 	/* Configuramos el PinA5 */
-	userLed.pGPIOx = GPIOB;
-	userLed.pinConfig.GPIO_PinNumber = PIN_10;
+	userLed.pGPIOx = GPIOA;
+	userLed.pinConfig.GPIO_PinNumber = PIN_5;
 	userLed.pinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	userLed.pinConfig.GPIO_PinOutputType = GPIO_OTYPE_PUSHPULL;
 	userLed.pinConfig.GPIO_PinOutputSpeed = GPIO_OSPEED_MEDIUM;
